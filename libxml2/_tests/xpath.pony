@@ -3,7 +3,7 @@ use "pony_test"
 use "files"
 use "debug"
 
-class iso TestXPath is UnitTest
+class \nodoc\ iso TestXPath is UnitTest
   fun name(): String => "XPath Functions"
   fun apply(h: TestHelper) =>
     h.assert_true(true)
