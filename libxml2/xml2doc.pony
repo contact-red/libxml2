@@ -8,7 +8,6 @@ class Xml2Doc
   XPath evaluation helpers.
   """
   let ptr': NullablePointer[XmlDoc]
-  let ptr: XmlDoc
 
   new parseFile(auth: FileAuth, pfilename: String val) ? =>
     """
@@ -22,8 +21,8 @@ class Xml2Doc
     document pointer.
     """
     let ptrx: NullablePointer[XmlDoc] = LibXML2.xmlParseFile(pfilename)
+    if (ptrx.is_none()) then error end
     ptr' = ptrx
-    ptr = ptr'.apply()?
 
   new parseDoc(pcur: String val) ? =>
     """
@@ -36,8 +35,8 @@ class Xml2Doc
     document pointer.
     """
     let ptrx: NullablePointer[XmlDoc] = LibXML2.xmlParseDoc(pcur)
+    if (ptrx.is_none()) then error end
     ptr' = ptrx
-    ptr = ptr'.apply()?
 
   fun xpathEval(xpath: String val, namespaces: Array[(String val, String val)] = []): Xml2XPathResult =>
     """
