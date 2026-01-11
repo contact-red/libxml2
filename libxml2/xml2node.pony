@@ -8,8 +8,9 @@ class Xml2Node
   var ptr': NullablePointer[XmlNode]
   var ptr: XmlNode
   var allocated: Bool
+  var xml2doc: Xml2Doc tag
 
-  new fromPTR(ptrx: NullablePointer[XmlNode])? =>
+  new fromPTR(xml2doc': Xml2Doc tag, ptrx: NullablePointer[XmlNode])? =>
     """
     Create an `Xml2Node` from a non-null libxml2 `xmlNode*`.
 
@@ -19,6 +20,7 @@ class Xml2Node
     `ptr'`, assigns the underlying `XmlNode` to `ptr`, and marks the node
     as allocated.
     """
+    xml2doc = xml2doc'
     if (ptrx.is_none()) then
       error
     else
@@ -46,7 +48,7 @@ class Xml2Node
     end
     LibXML2.xmlXPathSetContextNode(ptr', tmpctx)
     let xptr: NullablePointer[XmlXPathObject] = LibXML2.xmlXPathEval(xpath, tmpctx)
-    let xpo: Xml2XPathResult = Xml2XPathObject(xptr)
+    let xpo: Xml2XPathResult = Xml2XPathObject(xml2doc, xptr)
     LibXML2.xmlXPathFreeContext(tmpctx)
     xpo
 
@@ -142,11 +144,11 @@ class Xml2Node
 
     var fptr: NullablePointer[XmlNode] = LibXML2.xmlFirstElementChild(ptr')
     try
-      rv.push(Xml2Node.fromPTR(fptr)?)
+      rv.push(Xml2Node.fromPTR(xml2doc, fptr)?)
       while (elementCount > 0) do
         elementCount = elementCount - 1
         fptr = LibXML2.xmlNextElementSibling(fptr)
-        rv.push(Xml2Node.fromPTR(fptr)?)
+        rv.push(Xml2Node.fromPTR(xml2doc, fptr)?)
       end
     end
     rv

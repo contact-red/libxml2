@@ -11,7 +11,7 @@ primitive Xml2XPathObject
   Factory for converting a raw libxml2 `xmlXPathObject*` into a high-level
   `Xml2XPathResult` (nodes, boolean, number, or string) usable from Pony.
   """
-  fun apply(ptrx: NullablePointer[XmlXPathObject]): Xml2XPathResult =>
+  fun apply(xml2doc: Xml2Doc tag, ptrx: NullablePointer[XmlXPathObject]): Xml2XPathResult =>
     """
     Wrap a nullable `xmlXPathObject*` and return an `Xml2XPathResult`
     matching the XPath result type.
@@ -49,7 +49,7 @@ primitive Xml2XPathObject
               nodeset.nodeTab, nodeset.nodeNr.usize())
 
           for f in nodearray'.values() do
-            nodearray.push(Xml2Node.fromPTR(f)?)
+            nodearray.push(Xml2Node.fromPTR(xml2doc, f)?)
           end
           return nodearray
         end

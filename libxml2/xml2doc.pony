@@ -57,7 +57,7 @@ class Xml2Doc
       LibXML2.xmlXPathRegisterNs(tmpctx, n, url)
     end
     let xptr: NullablePointer[XmlXPathObject] = LibXML2.xmlXPathEval(xpath, tmpctx)
-    let xpo: Xml2XPathResult = Xml2XPathObject(xptr)
+    let xpo: Xml2XPathResult = Xml2XPathObject(recover tag this end, xptr)
     LibXML2.xmlXPathFreeContext(tmpctx)
     xpo
 
@@ -69,11 +69,7 @@ class Xml2Doc
     if the document has no root element or the returned pointer is null.
     """
     let ptrx: NullablePointer[XmlNode] = LibXML2.xmlDocGetRootElement(ptr')
-    Xml2Node.fromPTR(ptrx)?
+    Xml2Node.fromPTR(recover tag this end, ptrx)?
 
-/*
- * DO NOT REENABLE THIS UNTIL WE'VE FOUND A WAY TO ENSURE THAT NO OTHER REFERENCES
- * EXIST IN OUR PROGRAM. THIS HAS TO BE LAST OR ELSE SEGFAULT!
- */
-//  fun _final() =>
-//    LibXML2.xmlFreeDoc(ptr')
+  fun _final() =>
+    LibXML2.xmlFreeDoc(ptr')
