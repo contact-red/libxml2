@@ -17,6 +17,9 @@ class \nodoc\ iso TestParseDocAndRoot is UnitTest
       let doc = Xml2Doc.parseDoc(xml)?
       let root = doc.getRootElement()?
       h.assert_eq[String]("root", root.name())
+      var children: Array[Xml2Node] = root.getChildren()
+      h.assert_eq[String]("child", children(0)?.name())
+      h.assert_eq[String]("child", children(1)?.name())
     else
       h.fail("Failed to parse XML or get root element")
     end

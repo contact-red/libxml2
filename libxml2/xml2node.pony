@@ -1,4 +1,5 @@
 use "raw/"
+use "debug"
 
 class Xml2Node
   """
@@ -7,7 +8,6 @@ class Xml2Node
   """
   var ptr': NullablePointer[XmlNode]
   var ptr: XmlNode
-  var allocated: Bool
   var xml2doc: Xml2Doc tag
 
   new fromPTR(xml2doc': Xml2Doc tag, ptrx: NullablePointer[XmlNode])? =>
@@ -26,7 +26,6 @@ class Xml2Node
     else
       ptr' = ptrx
       ptr = ptr'.apply()?
-      allocated = true
     end
 
   fun xpathEval(xpath: String val,  namespaces: Array[(String val, String val)] = []): Xml2XPathResult =>
@@ -116,15 +115,6 @@ class Xml2Node
     """
     LibXML2.xmlNodeGetLang(ptr')
 
-  fun ref castNodeToString(): String =>
-    """
-    Cast this node to a string using XPath’s string conversion semantics.
-
-    This is equivalent to `xpathCastNodeToString` and wraps
-    `xmlXPathCastNodeToString` on the underlying node.
-    """
-    LibXML2.xmlXPathCastNodeToString(ptr')
-
   fun ref getChildren(): Array[Xml2Node] =>
     """
     Return all child **element** nodes of this node as an array of
@@ -137,20 +127,20 @@ class Xml2Node
     """
     var rv: Array[Xml2Node] = Array[Xml2Node]
     var elementCount: U64 = LibXML2.xmlChildElementCount(ptr')
+    Debug.out(elementCount.string())
 
     if (elementCount == 0) then
       return(rv)
     end
 
-    var fptr: NullablePointer[XmlNode] = LibXML2.xmlFirstElementChild(ptr')
-    try
-      rv.push(Xml2Node.fromPTR(xml2doc, fptr)?)
-      while (elementCount > 0) do
-        elementCount = elementCount - 1
-        fptr = LibXML2.xmlNextElementSibling(fptr)
-        rv.push(Xml2Node.fromPTR(xml2doc, fptr)?)
+    var child: NullablePointer[XmlNode] = LibXML2.xmlFirstElementChild(ptr')
+    while (not child.is_none()) do
+      try
+        rv.push(Xml2Node.fromPTR(xml2doc, child)?)
       end
+      child = LibXML2.xmlNextElementSibling(child)
     end
+    Debug.out(rv.size().string())
     rv
 
   fun ref nodeDump(plevel: I32, pformat: I32): String val =>
