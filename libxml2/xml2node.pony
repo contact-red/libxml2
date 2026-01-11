@@ -87,6 +87,20 @@ class Xml2Node
     """
     LibXML2.xmlXPathCastNodeToString(ptr')
 
+  fun ref getProps(): Array[(String, String)] =>
+    var rv: Array[(String, String)] = Array[(String, String)]
+    var attr: NullablePointer[XmlAttr] = ptr.properties
+    while (not attr.is_none()) do
+      try
+        var attrname: String val = String.from_cstring(attr.apply()?.name).clone()
+        rv.push((attrname, getProp(attrname)))
+        attr = attr.apply()?.next
+      else
+        return rv
+      end
+    end
+    rv
+
   fun ref getProp(pname: String): String =>
     """
     Get the value of an attribute on this element node.
@@ -127,7 +141,6 @@ class Xml2Node
     """
     var rv: Array[Xml2Node] = Array[Xml2Node]
     var elementCount: U64 = LibXML2.xmlChildElementCount(ptr')
-    Debug.out(elementCount.string())
 
     if (elementCount == 0) then
       return(rv)
@@ -140,8 +153,19 @@ class Xml2Node
       end
       child = LibXML2.xmlNextElementSibling(child)
     end
-    Debug.out(rv.size().string())
     rv
+
+    fun ref setProp(pname: String val, pvalue: String val) =>
+      """
+      Creates or Sets a property value (think XML Attribute) on this node.
+      """
+      LibXML2.xmlSetProp(ptr', pname, pvalue)
+
+    fun ref unsetProp(pname: String val) =>
+      """
+      Unsets a property (think XML Attribute) on this node.
+      """
+      LibXML2.xmlUnsetProp(ptr', pname)
 
   fun ref nodeDump(plevel: I32, pformat: I32): String val =>
     """

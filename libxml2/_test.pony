@@ -19,4 +19,6 @@ actor \nodoc\ Main is TestList
     test(TestNodeAttributesAndContent)
     test(TestXPathScalarResults)
     test(TestParseError)
+    test(TestGetProps)
+    test(TestModifyProps)
 

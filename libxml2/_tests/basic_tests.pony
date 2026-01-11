@@ -2,6 +2,84 @@ use "../../libxml2"
 use "pony_test"
 use "files"
 
+class \nodoc\ iso TestModifyProps is UnitTest
+  fun name(): String => "xml2doc/parse-modify-props"
+
+  fun apply(h: TestHelper) =>
+    let xml =
+      """
+      <root>
+        <child id="c1" name="wibble">hello</child>
+        <child id="c2" name="wobble">world</child>
+      </root>
+      """
+    try
+      let doc = Xml2Doc.parseDoc(xml)?
+      let root = doc.getRootElement()?
+      h.assert_eq[String](root.nodeDump(0,0),
+        """
+        <root>
+          <child id="c1" name="wibble">hello</child>
+          <child id="c2" name="wobble">world</child>
+        </root>""")
+      root.setProp("name", "someroot")
+      h.assert_eq[String](root.nodeDump(0,0),
+        """
+        <root name="someroot">
+          <child id="c1" name="wibble">hello</child>
+          <child id="c2" name="wobble">world</child>
+        </root>""")
+      root.setProp("name", "someroot2")
+      h.assert_eq[String](root.nodeDump(0,0),
+        """
+        <root name="someroot2">
+          <child id="c1" name="wibble">hello</child>
+          <child id="c2" name="wobble">world</child>
+        </root>""")
+      root.unsetProp("name")
+      h.assert_eq[String](root.nodeDump(0,0),
+        """
+        <root>
+          <child id="c1" name="wibble">hello</child>
+          <child id="c2" name="wobble">world</child>
+        </root>""")
+    else
+      h.fail("Failed to parse XML or get root element")
+    end
+
+class \nodoc\ iso TestGetProps is UnitTest
+  fun name(): String => "xml2doc/parse-get-props"
+
+  fun apply(h: TestHelper) =>
+    let xml =
+      """
+      <root>
+        <child id="c1" name="wibble">hello</child>
+        <child id="c2" name="wobble">world</child>
+      </root>
+      """
+    try
+      let doc = Xml2Doc.parseDoc(xml)?
+      let root = doc.getRootElement()?
+      h.assert_eq[String]("root", root.name())
+      var children: Array[Xml2Node] = root.getChildren()
+      h.assert_eq[String]("child", children(0)?.name())
+      h.assert_eq[String]("child", children(1)?.name())
+      var props: Array[(String, String)] = children(0)?.getProps()
+      h.assert_eq[String](props(0)?._1, "id")
+      h.assert_eq[String](props(0)?._2, "c1")
+      h.assert_eq[String](props(1)?._1, "name")
+      h.assert_eq[String](props(1)?._2, "wibble")
+
+      props = children(1)?.getProps()
+      h.assert_eq[String](props(0)?._1, "id")
+      h.assert_eq[String](props(0)?._2, "c2")
+      h.assert_eq[String](props(1)?._1, "name")
+      h.assert_eq[String](props(1)?._2, "wobble")
+    else
+      h.fail("Failed to parse XML or get root element")
+    end
+
 class \nodoc\ iso TestParseDocAndRoot is UnitTest
   fun name(): String => "xml2doc/parse-doc-and-root"
 
