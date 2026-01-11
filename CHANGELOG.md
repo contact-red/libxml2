@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Added
 
+- Added functions to manipulate XML Attributes. ([PR #19](https://github.com/redvers/libxml2/pull/19))
 
 ### Changed
 
