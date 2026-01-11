@@ -53,9 +53,9 @@ primitive Xml2XPathObject
           end
           return nodearray
         end
-      | XPathTypeBoolean()     => XPathTypeBoolean ; return (ptr.boolval == 1)
-      | XPathTypeNumber()      => XPathTypeNumber  ; return ptr.floatval
-      | XPathTypeString()      => XPathTypeString  ; return String.from_cstring(ptr.stringval).clone()
+      | XPathTypeBoolean()     => return (ptr.boolval == 1)
+      | XPathTypeNumber()      => return ptr.floatval
+      | XPathTypeString()      => return String.from_cstring(ptr.stringval).clone()
       | XPathTypePoint()       => return None // As yet unsupported
       | XPathTypeRange()       => return None // As yet unsupported
       | XPathTypeLocationSet() => return None // As yet unsupported
