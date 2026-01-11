@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file. This projec
 ### Fixed
 
 - Fixes #2 by ensuring that Xml2Doc is last to die. ([PR #8](https://github.com/redvers/libxml2/pull/8))
+- Fixes: #4 Code Review Xml2Node ([PR #10](https://github.com/redvers/libxml2/pull/10))
 
 ### Added
 
