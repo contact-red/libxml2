@@ -14,3 +14,9 @@ The documentation states that for our current parsing use-cases it is unsafe to 
 
 As such, we have threaded a tag reference through every dependent Pony instance so that it will be "impossible"™ for Xml2Doc._final() to execute the frees until all other dependent references are no longer reachable.
 
+## Fixes: #4 Code Review Xml2Node
+
+- Removed allocated flag as unused.
+- getChildren wasn't actually an off-by-one error, but I prefer the suggested solution.
+- removed castNodeToString function
+
