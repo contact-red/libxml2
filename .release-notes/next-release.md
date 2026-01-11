@@ -20,3 +20,10 @@ As such, we have threaded a tag reference through every dependent Pony instance 
 - getChildren wasn't actually an off-by-one error, but I prefer the suggested solution.
 - removed castNodeToString function
 
+## Fixes: #5 Code Review Xml2XPathObject
+
+
+- Vestigal code removed.
+- Documentation already notes the unsupported data types.
+- There is no facility for logging until later versions of the C library become more common.
+
