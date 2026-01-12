@@ -51,6 +51,30 @@ class Xml2Node
     LibXML2.xmlXPathFreeContext(tmpctx)
     xpo
 
+  fun xpathEvalNodes(xpath: String val, namespaces: Array[(String val, String val)] = []): Array[Xml2Node] ? =>
+    """
+    A convenience method that calls xpathEval and returns an Array[Xml2Node].
+    """
+    (xpathEval(xpath, namespaces) as Array[Xml2Node])
+
+  fun xpathEvalString(xpath: String val, namespaces: Array[(String val, String val)] = []): String val ? =>
+    """
+    A convenience method that calls xpathEval and returns a String val.
+    """
+    (xpathEval(xpath, namespaces) as String val)
+
+  fun xpathEvalF64(xpath: String val, namespaces: Array[(String val, String val)] = []): F64 ? =>
+    """
+    A convenience method that calls xpathEval and returns an F64 (XML's default Number type in libxml2).
+    """
+    (xpathEval(xpath, namespaces) as F64)
+
+  fun xpathEvalBool(xpath: String val, namespaces: Array[(String val, String val)] = []): Bool ? =>
+    """
+    A convenience method that calls xpathEval and returns a Bool.
+    """
+    (xpathEval(xpath, namespaces) as Bool)
+
   fun ref name(): String val =>
     """
     Return this node’s name as a Pony `String`.

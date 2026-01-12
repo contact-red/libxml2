@@ -128,6 +128,27 @@ class \nodoc\ iso TestDocXPathSimpleNodeset is UnitTest
       h.fail("Exception in TestDocXPathSimpleNodeset")
     end
 
+class \nodoc\ iso TestDocXPathSimpleNodesetConvenience is UnitTest
+  fun name(): String => "xml2doc/xpath-doc-nodeset-convenience"
+
+  fun apply(h: TestHelper) =>
+    let xml =
+      """
+      <root>
+        <child id="c1">hello</child>
+        <child id="c2">world</child>
+      </root>
+      """
+    try
+      let doc = Xml2Doc.parseDoc(xml)?
+      let nodes: Array[Xml2Node] = doc.xpathEvalNodes("//child")?
+      h.assert_eq[USize](2, nodes.size())
+      h.assert_eq[String]("child", nodes(0)?.name())
+      h.assert_eq[String]("child", nodes(1)?.name())
+    else
+      h.fail("Exception in TestDocXPathSimpleNodeset")
+    end
+
 class \nodoc\ iso TestNodeXPathRelative is UnitTest
   fun name(): String => "xml2doc/xpath-node-relative"
 
@@ -164,6 +185,36 @@ class \nodoc\ iso TestNodeXPathRelative is UnitTest
       else
         h.fail("Expected nodeset result for //section")
       end
+    else
+      h.fail("Exception in TestNodeXPathRelative")
+    end
+
+class \nodoc\ iso TestNodeXPathRelativeConvenience is UnitTest
+  fun name(): String => "xml2doc/xpath-node-relative-convenience"
+
+  fun apply(h: TestHelper) =>
+    let xml =
+      """
+      <root>
+        <section>
+          <item>one</item>
+          <item>two</item>
+        </section>
+        <section>
+          <item>three</item>
+        </section>
+      </root>
+      """
+    try
+      let doc = Xml2Doc.parseDoc(xml)?
+      let root = doc.getRootElement()?
+      let sec_nodes: Array[Xml2Node] = doc.xpathEvalNodes("//section")?
+      h.assert_eq[USize](2, sec_nodes.size())
+      let first_sec = sec_nodes(0)?
+      let items: Array[Xml2Node] = first_sec.xpathEvalNodes("./item")?
+      h.assert_eq[USize](2, items.size())
+      h.assert_eq[String]("one", items(0)?.getContent())
+      h.assert_eq[String]("two", items(1)?.getContent())
     else
       h.fail("Exception in TestNodeXPathRelative")
     end
@@ -237,6 +288,35 @@ class \nodoc\ iso TestXPathScalarResults is UnitTest
       else
         h.fail("Expected String from string(//child[@id='c2'])")
       end
+    else
+      h.fail("Exception in TestXPathScalarResults")
+    end
+
+class \nodoc\ iso TestXPathScalarResultsConvenience is UnitTest
+  fun name(): String => "xml2doc/xpath-scalar-results-convenience"
+
+  fun apply(h: TestHelper) =>
+    let xml =
+      """
+      <root>
+        <child id="c1">1</child>
+        <child id="c2">2</child>
+      </root>
+      """
+    try
+      let doc = Xml2Doc.parseDoc(xml)?
+
+      // count() -> number
+      let n: F64 = doc.xpathEvalF64("count(//child)")?
+      h.assert_true(n.usize() == 2)
+
+      // boolean() -> bool
+      let b: Bool = doc.xpathEvalBool("boolean(//child[@id='c1'])")?
+      h.assert_true(b)
+
+      // string() -> string
+      let s: String val = doc.xpathEvalString("string(//child[@id='c2'])")?
+      h.assert_eq[String]("2", s)
     else
       h.fail("Exception in TestXPathScalarResults")
     end
