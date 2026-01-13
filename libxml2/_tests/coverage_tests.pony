@@ -4,7 +4,8 @@ use "files"
 
 class \nodoc\ iso TestNodeUtilityMethods is UnitTest
   """
-  Tests for Xml2Node utility methods: getLineNo, getNodePath, xpathCastNodeToString
+  Tests for Xml2Node utility methods: getLineNo, getNodePath,
+  xpathCastNodeToString
   """
   fun name(): String => "xml2node/utility-methods"
 
@@ -210,11 +211,13 @@ class \nodoc\ iso TestNodeDumpFormatting is UnitTest
 
       // With formatting (level=0, format=1)
       let dump_formatted = root.nodeDump(0, 1)
-      h.assert_eq[String]("<root>\n  <child>hello</child>\n</root>", dump_formatted)
+      h.assert_eq[String](
+        "<root>\n  <child>hello</child>\n</root>", dump_formatted)
 
       // With indentation level (level=2, format=1)
       let dump_indented = root.nodeDump(2, 1)
-      h.assert_eq[String]("<root>\n      <child>hello</child>\n    </root>", dump_indented)
+      h.assert_eq[String](
+        "<root>\n      <child>hello</child>\n    </root>", dump_indented)
     else
       h.fail("Failed to parse XML")
     end
@@ -235,7 +238,8 @@ class \nodoc\ iso TestXPathConvenienceWithNamespaces is UnitTest
       """
     try
       let doc = Xml2Doc.parseDoc(xml)?
-      let ns: Array[(String val, String val)] = [("ns", "http://example.com/ns")]
+      let ns: Array[(String val, String val)] =
+        [("ns", "http://example.com/ns")]
 
       // Test xpathEvalNodes with namespaces
       let nodes = doc.xpathEvalNodes("//ns:item", ns)?
@@ -277,7 +281,8 @@ class \nodoc\ iso TestNodeXPathConvenienceWithNamespaces is UnitTest
       """
     try
       let doc = Xml2Doc.parseDoc(xml)?
-      let ns: Array[(String val, String val)] = [("ns", "http://example.com/ns")]
+      let ns: Array[(String val, String val)] =
+        [("ns", "http://example.com/ns")]
 
       let root = doc.getRootElement()?
       let containers = root.getChildren()
@@ -343,7 +348,8 @@ class \nodoc\ iso TestMultipleAttributes is UnitTest
     let xml =
       """
       <root>
-        <item id="1" class="primary" data-value="100" enabled="true">content</item>
+        <item id="1" class="primary" data-value="100"
+              enabled="true">content</item>
       </root>
       """
     try
@@ -418,7 +424,8 @@ class \nodoc\ iso TestDeepNesting is UnitTest
       let nodes = doc.xpathEvalNodes("//level5")?
       h.assert_eq[USize](1, nodes.size())
       h.assert_eq[String]("deep content", nodes(0)?.getContent())
-      h.assert_eq[String]("/level1/level2/level3/level4/level5", nodes(0)?.getNodePath())
+      h.assert_eq[String](
+        "/level1/level2/level3/level4/level5", nodes(0)?.getNodePath())
 
       // Navigate using getChildren
       let root = doc.getRootElement()?
@@ -473,7 +480,8 @@ class \nodoc\ iso TestXPathNumericOperations is UnitTest
       let has_cheap = doc.xpathEvalBool("boolean(//item[@price < 6])")?
       h.assert_true(has_cheap)
 
-      let has_very_expensive = doc.xpathEvalBool("boolean(//item[@price > 100])")?
+      let has_very_expensive =
+        doc.xpathEvalBool("boolean(//item[@price > 100])")?
       h.assert_false(has_very_expensive)
     else
       h.fail("Failed to parse XML or evaluate XPath")
@@ -508,11 +516,13 @@ class \nodoc\ iso TestXPathStringFunctions is UnitTest
       h.assert_false(has_bye)
 
       // Test starts-with
-      let starts_hello = doc.xpathEvalBool("starts-with(//item[1]/@name, 'Hello')")?
+      let starts_hello =
+        doc.xpathEvalBool("starts-with(//item[1]/@name, 'Hello')")?
       h.assert_true(starts_hello)
 
       // Test concat
-      let concat_result = doc.xpathEvalString("concat('prefix-', //item[1]/@name, '-suffix')")?
+      let concat_result =
+        doc.xpathEvalString("concat('prefix-', //item[1]/@name, '-suffix')")?
       h.assert_eq[String]("prefix-Hello World-suffix", concat_result)
 
       // Test normalize-space
@@ -552,7 +562,9 @@ class \nodoc\ iso TestSpecialCharacters is UnitTest
     let xml =
       """
       <root>
-        <item attr="&lt;tag&gt;">&amp; ampersand &lt; less &gt; greater &quot; quote</item>
+        <item attr="&lt;tag&gt;">
+          &amp; ampersand &lt; less &gt; greater &quot; quote
+        </item>
       </root>
       """
     try

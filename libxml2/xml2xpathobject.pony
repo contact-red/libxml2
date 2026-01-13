@@ -11,7 +11,11 @@ primitive Xml2XPathObject
   Factory for converting a raw libxml2 `xmlXPathObject*` into a high-level
   `Xml2XPathResult` (nodes, boolean, number, or string) usable from Pony.
   """
-  fun apply(xml2doc: Xml2Doc tag, ptrx: NullablePointer[XmlXPathObject]): Xml2XPathResult =>
+  fun apply(
+    xml2doc: Xml2Doc tag,
+    ptrx: NullablePointer[XmlXPathObject])
+    : Xml2XPathResult
+  =>
     """
     Wrap a nullable `xmlXPathObject*` and return an `Xml2XPathResult`
     matching the XPath result type.
@@ -36,9 +40,9 @@ primitive Xml2XPathObject
     try
       let ptr: XmlXPathObject = ptrx.apply()?
       match ptr.xmltype
-      | XPathTypeUndefined()   => return None
-      | XPathTypeNodeset()     =>
-        if (ptr.nodesetval.is_none()) then
+      | XPathTypeUndefined() => return None
+      | XPathTypeNodeset() =>
+        if ptr.nodesetval.is_none() then
           return None
         else
           let nodearray: Array[Xml2Node] = Array[Xml2Node]
@@ -53,14 +57,15 @@ primitive Xml2XPathObject
           end
           return nodearray
         end
-      | XPathTypeBoolean()     => return (ptr.boolval == 1)
-      | XPathTypeNumber()      => return ptr.floatval
-      | XPathTypeString()      => return String.from_cstring(ptr.stringval).clone()
-      | XPathTypePoint()       => return None // As yet unsupported
-      | XPathTypeRange()       => return None // As yet unsupported
+      | XPathTypeBoolean() => return (ptr.boolval == 1)
+      | XPathTypeNumber() => return ptr.floatval
+      | XPathTypeString() =>
+        return String.from_cstring(ptr.stringval).clone()
+      | XPathTypePoint() => return None // As yet unsupported
+      | XPathTypeRange() => return None // As yet unsupported
       | XPathTypeLocationSet() => return None // As yet unsupported
-      | XPathTypeUsers()       => return None // As yet unsupported
-      | XPathTypeXsltTree()    => return None // As yet unsupported
+      | XPathTypeUsers() => return None // As yet unsupported
+      | XPathTypeXsltTree() => return None // As yet unsupported
       else
         return None
       end

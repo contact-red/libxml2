@@ -21,14 +21,18 @@ class Xml2Node
     as allocated.
     """
     xml2doc = xml2doc'
-    if (ptrx.is_none()) then
+    if ptrx.is_none() then
       error
     else
       ptr' = ptrx
       ptr = ptr'.apply()?
     end
 
-  fun xpathEval(xpath: String val,  namespaces: Array[(String val, String val)] = []): Xml2XPathResult =>
+  fun xpathEval(
+    xpath: String val,
+    namespaces: Array[(String val, String val)] = [])
+    : Xml2XPathResult
+  =>
     """
     Evaluate an XPath expression relative to this node as the context node.
 
@@ -41,35 +45,54 @@ class Xml2Node
     calls `xmlXPathEval`, frees the context, and returns an
     `Xml2XPathResult` for the resulting `xmlXPathObject*`.
     """
-    let tmpctx: NullablePointer[XmlXPathContext] = LibXML2.xmlXPathNewContext(ptr.doc)
+    let tmpctx: NullablePointer[XmlXPathContext] =
+      LibXML2.xmlXPathNewContext(ptr.doc)
     for (n, url) in namespaces.values() do
       LibXML2.xmlXPathRegisterNs(tmpctx, n, url)
     end
     LibXML2.xmlXPathSetContextNode(ptr', tmpctx)
-    let xptr: NullablePointer[XmlXPathObject] = LibXML2.xmlXPathEval(xpath, tmpctx)
+    let xptr: NullablePointer[XmlXPathObject] =
+      LibXML2.xmlXPathEval(xpath, tmpctx)
     let xpo: Xml2XPathResult = Xml2XPathObject(xml2doc, xptr)
     LibXML2.xmlXPathFreeContext(tmpctx)
     xpo
 
-  fun xpathEvalNodes(xpath: String val, namespaces: Array[(String val, String val)] = []): Array[Xml2Node] ? =>
+  fun xpathEvalNodes(
+    xpath: String val,
+    namespaces: Array[(String val, String val)] = [])
+    : Array[Xml2Node] ?
+  =>
     """
     A convenience method that calls xpathEval and returns an Array[Xml2Node].
     """
     (xpathEval(xpath, namespaces) as Array[Xml2Node])
 
-  fun xpathEvalString(xpath: String val, namespaces: Array[(String val, String val)] = []): String val ? =>
+  fun xpathEvalString(
+    xpath: String val,
+    namespaces: Array[(String val, String val)] = [])
+    : String val ?
+  =>
     """
     A convenience method that calls xpathEval and returns a String val.
     """
     (xpathEval(xpath, namespaces) as String val)
 
-  fun xpathEvalF64(xpath: String val, namespaces: Array[(String val, String val)] = []): F64 ? =>
+  fun xpathEvalF64(
+    xpath: String val,
+    namespaces: Array[(String val, String val)] = [])
+    : F64 ?
+  =>
     """
-    A convenience method that calls xpathEval and returns an F64 (XML's default Number type in libxml2).
+    A convenience method that calls xpathEval and returns an F64 (XML's
+    default Number type in libxml2).
     """
     (xpathEval(xpath, namespaces) as F64)
 
-  fun xpathEvalBool(xpath: String val, namespaces: Array[(String val, String val)] = []): Bool ? =>
+  fun xpathEvalBool(
+    xpath: String val,
+    namespaces: Array[(String val, String val)] = [])
+    : Bool ?
+  =>
     """
     A convenience method that calls xpathEval and returns a Bool.
     """
@@ -114,9 +137,10 @@ class Xml2Node
   fun ref getProps(): Array[(String, String)] =>
     var rv: Array[(String, String)] = Array[(String, String)]
     var attr: NullablePointer[XmlAttr] = ptr.properties
-    while (not attr.is_none()) do
+    while not attr.is_none() do
       try
-        var attrname: String val = String.from_cstring(attr.apply()?.name).clone()
+        var attrname: String val =
+          String.from_cstring(attr.apply()?.name).clone()
         rv.push((attrname, getProp(attrname)))
         attr = attr.apply()?.next
       else
@@ -166,12 +190,12 @@ class Xml2Node
     var rv: Array[Xml2Node] = Array[Xml2Node]
     var elementCount: U64 = LibXML2.xmlChildElementCount(ptr')
 
-    if (elementCount == 0) then
-      return(rv)
+    if elementCount == 0 then
+      return rv
     end
 
     var child: NullablePointer[XmlNode] = LibXML2.xmlFirstElementChild(ptr')
-    while (not child.is_none()) do
+    while not child.is_none() do
       try
         rv.push(Xml2Node.fromPTR(xml2doc, child)?)
       end
@@ -179,17 +203,17 @@ class Xml2Node
     end
     rv
 
-    fun ref setProp(pname: String val, pvalue: String val) =>
-      """
-      Creates or Sets a property value (think XML Attribute) on this node.
-      """
-      LibXML2.xmlSetProp(ptr', pname, pvalue)
+  fun ref setProp(pname: String val, pvalue: String val) =>
+    """
+    Creates or Sets a property value (think XML Attribute) on this node.
+    """
+    LibXML2.xmlSetProp(ptr', pname, pvalue)
 
-    fun ref unsetProp(pname: String val) =>
-      """
-      Unsets a property (think XML Attribute) on this node.
-      """
-      LibXML2.xmlUnsetProp(ptr', pname)
+  fun ref unsetProp(pname: String val) =>
+    """
+    Unsets a property (think XML Attribute) on this node.
+    """
+    LibXML2.xmlUnsetProp(ptr', pname)
 
   fun ref nodeDump(plevel: I32, pformat: I32): String val =>
     """

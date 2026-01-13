@@ -26,5 +26,6 @@ class \nodoc\ iso TestParseError is UnitTest
 //      h.assert_eq[I32](err.code, 5)
 //      h.assert_eq[String](err.level, "Fatal")
 //      h.assert_eq[I32](err.line, 3)
-//      h.assert_eq[String](err.message, "Extra content at the end of the document\n")
+//      h.assert_eq[String](
+//        err.message, "Extra content at the end of the document\n")
     end

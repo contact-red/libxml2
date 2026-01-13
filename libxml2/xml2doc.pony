@@ -21,7 +21,7 @@ class Xml2Doc
     document pointer.
     """
     let ptrx: NullablePointer[XmlDoc] = LibXML2.xmlParseFile(pfilename)
-    if (ptrx.is_none()) then error end
+    if ptrx.is_none() then error end
     ptr' = ptrx
 
   new parseDoc(pcur: String val) ? =>
@@ -35,10 +35,14 @@ class Xml2Doc
     document pointer.
     """
     let ptrx: NullablePointer[XmlDoc] = LibXML2.xmlParseDoc(pcur)
-    if (ptrx.is_none()) then error end
+    if ptrx.is_none() then error end
     ptr' = ptrx
 
-  fun xpathEval(xpath: String val, namespaces: Array[(String val, String val)] = []): Xml2XPathResult =>
+  fun xpathEval(
+    xpath: String val,
+    namespaces: Array[(String val, String val)] = [])
+    : Xml2XPathResult
+  =>
     """
     Evaluate an XPath expression against this document and return the result.
 
@@ -51,34 +55,53 @@ class Xml2Doc
     Returns an `Xml2XPathResult` wrapper around the resulting
     `xmlXPathObject*`.
     """
-    let tmpctx: NullablePointer[XmlXPathContext] = LibXML2.xmlXPathNewContext(ptr')
+    let tmpctx: NullablePointer[XmlXPathContext] =
+      LibXML2.xmlXPathNewContext(ptr')
     for (n, url) in namespaces.values() do
       LibXML2.xmlXPathRegisterNs(tmpctx, n, url)
     end
-    let xptr: NullablePointer[XmlXPathObject] = LibXML2.xmlXPathEval(xpath, tmpctx)
+    let xptr: NullablePointer[XmlXPathObject] =
+      LibXML2.xmlXPathEval(xpath, tmpctx)
     let xpo: Xml2XPathResult = Xml2XPathObject(recover tag this end, xptr)
     LibXML2.xmlXPathFreeContext(tmpctx)
     xpo
 
-  fun xpathEvalNodes(xpath: String val, namespaces: Array[(String val, String val)] = []): Array[Xml2Node] ? =>
+  fun xpathEvalNodes(
+    xpath: String val,
+    namespaces: Array[(String val, String val)] = [])
+    : Array[Xml2Node] ?
+  =>
     """
     A convenience method that calls xpathEval and returns an Array[Xml2Node].
     """
     (xpathEval(xpath, namespaces) as Array[Xml2Node])
 
-  fun xpathEvalString(xpath: String val, namespaces: Array[(String val, String val)] = []): String val ? =>
+  fun xpathEvalString(
+    xpath: String val,
+    namespaces: Array[(String val, String val)] = [])
+    : String val ?
+  =>
     """
     A convenience method that calls xpathEval and returns a String val.
     """
     (xpathEval(xpath, namespaces) as String val)
 
-  fun xpathEvalF64(xpath: String val, namespaces: Array[(String val, String val)] = []): F64 ? =>
+  fun xpathEvalF64(
+    xpath: String val,
+    namespaces: Array[(String val, String val)] = [])
+    : F64 ?
+  =>
     """
-    A convenience method that calls xpathEval and returns an F64 (XML's default number type in libxml2).
+    A convenience method that calls xpathEval and returns an F64 (XML's
+    default number type in libxml2).
     """
     (xpathEval(xpath, namespaces) as F64)
 
-  fun xpathEvalBool(xpath: String val, namespaces: Array[(String val, String val)] = []): Bool ? =>
+  fun xpathEvalBool(
+    xpath: String val,
+    namespaces: Array[(String val, String val)] = [])
+    : Bool ?
+  =>
     """
     A convenience method that calls xpathEval and returns a Bool.
     """

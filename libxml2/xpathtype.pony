@@ -1,13 +1,14 @@
-type XPathType is ( XPathTypeUndefined
-                  | XPathTypeNodeset
-                  | XPathTypeBoolean
-                  | XPathTypeNumber
-                  | XPathTypeString
-                  | XPathTypePoint
-                  | XPathTypeRange
-                  | XPathTypeLocationSet
-                  | XPathTypeUsers
-                  | XPathTypeXsltTree )
+type XPathType is
+  ( XPathTypeUndefined
+  | XPathTypeNodeset
+  | XPathTypeBoolean
+  | XPathTypeNumber
+  | XPathTypeString
+  | XPathTypePoint
+  | XPathTypeRange
+  | XPathTypeLocationSet
+  | XPathTypeUsers
+  | XPathTypeXsltTree )
 
 primitive XPathTypeUndefined   fun apply(): I32 => 0
 primitive XPathTypeNodeset     fun apply(): I32 => 1
