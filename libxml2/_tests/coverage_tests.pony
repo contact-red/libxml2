@@ -585,3 +585,151 @@ class \nodoc\ iso TestSpecialCharacters is UnitTest
     else
       h.fail("Failed to parse XML with special characters")
     end
+
+class \nodoc\ iso TestSerializeRoundTrip is UnitTest
+  """
+  Tests for round-trip serialization (parse → serialize → parse)
+  """
+  fun name(): String => "xml2doc/serialize-roundtrip"
+
+  fun apply(h: TestHelper) =>
+    let xml = "<root><child id=\"c1\">text</child></root>"
+    try
+      let doc1 = Xml2Doc.parseDoc(xml)?
+      let serialized = doc1.serialize(false)?  // compact
+      let doc2 = Xml2Doc.parseDoc(serialized)?
+
+      // Verify structure is preserved
+      let root = doc2.getRootElement()?
+      h.assert_eq[String]("root", root.name())
+      let children = root.getChildren()
+      h.assert_eq[USize](1, children.size())
+      h.assert_eq[String]("child", children(0)?.name())
+      h.assert_eq[String]("c1", children(0)?.getProp("id"))
+      h.assert_eq[String]("text", children(0)?.getContent())
+    else
+      h.fail("Round-trip serialization failed")
+    end
+
+class \nodoc\ iso TestSerializeFormatting is UnitTest
+  """
+  Tests for serialize() formatting options
+  """
+  fun name(): String => "xml2doc/serialize-formatting"
+
+  fun apply(h: TestHelper) =>
+    let xml = "<root><child>text</child></root>"
+    try
+      let doc = Xml2Doc.parseDoc(xml)?
+
+      // Compact should have no newlines in content
+      let compact = doc.serialize(false)?
+      h.assert_false(compact.contains("\n  "))
+
+      // Formatted should have newlines and indentation
+      let formatted = doc.serialize(true)?
+      h.assert_true(formatted.contains("\n"))
+    else
+      h.fail("Formatting test failed")
+    end
+
+class \nodoc\ iso TestSaveToFile is UnitTest
+  """
+  Tests for saveToFile() and file save/load round-trip
+  """
+  fun name(): String => "xml2doc/save-to-file"
+
+  fun apply(h: TestHelper) =>
+    let xml = "<root><child id=\"test\">content</child></root>"
+    let temp_file = "/tmp/pony_libxml2_test_output.xml"
+
+    try
+      let auth = FileAuth(h.env.root)
+
+      // Save document
+      let doc1 = Xml2Doc.parseDoc(xml)?
+      doc1.saveToFile(auth, temp_file)?
+
+      // Load it back
+      let doc2 = Xml2Doc.parseFile(auth, temp_file)?
+      let root = doc2.getRootElement()?
+      h.assert_eq[String]("root", root.name())
+
+      let children = root.getChildren()
+      h.assert_eq[String]("test", children(0)?.getProp("id"))
+      h.assert_eq[String]("content", children(0)?.getContent())
+    else
+      h.fail("Save/load test failed")
+    end
+
+class \nodoc\ iso TestSerializeEncoding is UnitTest
+  """
+  Tests for serialize() with different encodings
+  """
+  fun name(): String => "xml2doc/serialize-encoding"
+
+  fun apply(h: TestHelper) =>
+    let xml = "<root><child>Test content</child></root>"
+    try
+      let doc = Xml2Doc.parseDoc(xml)?
+
+      // UTF-8 encoding (default)
+      let utf8 = doc.serialize(true, "UTF-8")?
+      h.assert_true(utf8.contains("UTF-8"))
+      h.assert_true(utf8.contains("Test content"))
+
+      // ISO-8859-1 encoding
+      let iso8859 = doc.serialize(true, "ISO-8859-1")?
+      h.assert_true(iso8859.contains("ISO-8859-1"))
+    else
+      h.fail("Encoding test failed")
+    end
+
+class \nodoc\ iso TestSerializeModified is UnitTest
+  """
+  Tests for serializing modified documents
+  """
+  fun name(): String => "xml2doc/serialize-modified"
+
+  fun apply(h: TestHelper) =>
+    let xml = "<root><child id=\"old\">text</child></root>"
+    try
+      let doc = Xml2Doc.parseDoc(xml)?
+      let root = doc.getRootElement()?
+      let children = root.getChildren()
+
+      // Modify attribute
+      children(0)?.setProp("id", "new")
+
+      // Serialize and verify modification persisted
+      let serialized = doc.serialize(false)?
+      h.assert_true(serialized.contains("id=\"new\""))
+      h.assert_false(serialized.contains("id=\"old\""))
+    else
+      h.fail("Modified document serialization failed")
+    end
+
+class \nodoc\ iso TestSerializeErrors is UnitTest
+  """
+  Tests for serialize() and saveToFile() error handling
+  """
+  fun name(): String => "xml2doc/serialize-errors"
+
+  fun apply(h: TestHelper) =>
+    let xml = "<root><child>test</child></root>"
+
+    try
+      let doc = Xml2Doc.parseDoc(xml)?
+      let auth = FileAuth(h.env.root)
+
+      // Try to save to invalid path (should error)
+      try
+        doc.saveToFile(auth, "/nonexistent/path/file.xml")?
+        h.fail("Should have raised error for invalid path")
+      end
+
+      // Successful save should not error
+      doc.saveToFile(auth, "/tmp/valid_path.xml")?
+    else
+      h.fail("Error handling test setup failed")
+    end

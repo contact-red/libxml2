@@ -40,4 +40,11 @@ actor \nodoc\ Main is TestList
     test(TestXPathStringFunctions)
     test(TestEmptyDocument)
     test(TestSpecialCharacters)
+    // Serialization tests
+    test(TestSerializeRoundTrip)
+    test(TestSerializeFormatting)
+    test(TestSaveToFile)
+    test(TestSerializeEncoding)
+    test(TestSerializeModified)
+    test(TestSerializeErrors)
 
