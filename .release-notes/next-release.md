@@ -34,3 +34,26 @@ To:
   let nodes: Array[Xml2Node] = doc.xpathEvalNodes("//child")?
 ```
 
+## Adds Xml2Doc.serialize() and Xml2Doc.saveToFile()
+
+adds serialize() and saveToFile() methods to Xml2Doc, enabling
+XML documents to be saved to strings or files with optional formatting
+and encoding control.
+
+Implementation:
+- Added serialize() method using xmlDocDumpFormatMemoryEnc for in-memory
+  serialization with format and encoding options
+- Added saveToFile() method using xmlSaveFormatFileEnc for direct file
+  output
+- Both methods support pretty-printing and multiple character encodings
+  (UTF-8, ISO-8859-1, UTF-16, etc.)
+
+Testing:
+- Added 6 comprehensive test cases covering round-trip serialization,
+  formatting options, file I/O, encoding support, modified document
+  serialization, and error handling
+- All 33 tests pass successfully
+
+This feature enables both modifying existing XML documents and provides
+the foundation for creating new XML documents from scratch.
+
