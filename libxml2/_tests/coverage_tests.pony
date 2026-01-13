@@ -658,6 +658,10 @@ class \nodoc\ iso TestSaveToFile is UnitTest
       let children = root.getChildren()
       h.assert_eq[String]("test", children(0)?.getProp("id"))
       h.assert_eq[String]("content", children(0)?.getContent())
+
+      // Clean up test file
+      let fp = FilePath(auth, temp_file)
+      fp.remove()
     else
       h.fail("Save/load test failed")
     end
@@ -730,6 +734,188 @@ class \nodoc\ iso TestSerializeErrors is UnitTest
 
       // Successful save should not error
       doc.saveToFile(auth, "/tmp/valid_path.xml")?
+
+      // Clean up test file
+      let fp = FilePath(auth, "/tmp/valid_path.xml")
+      fp.remove()
     else
       h.fail("Error handling test setup failed")
+    end
+
+class \nodoc\ iso TestCreateWithRootConvenience is UnitTest
+  """
+  Tests for createWithRoot() convenience constructor
+  """
+  fun name(): String => "xml2doc/create-with-root-convenience"
+
+  fun apply(h: TestHelper) =>
+    try
+      let doc = Xml2Doc.createWithRoot("root")?
+      let root = doc.getRootElement()?
+      h.assert_eq[String]("root", root.name())
+
+      // Verify it's a valid document that can be serialized
+      let xml = doc.serialize()?
+      h.assert_true(xml.contains("<?xml version"))
+      h.assert_true(xml.contains("<root"))
+    else
+      h.fail("Failed to create document with root convenience method")
+    end
+
+class \nodoc\ iso TestMixedContent is UnitTest
+  """
+  Tests for creating mixed content (text nodes + element nodes)
+  """
+  fun name(): String => "xml2doc/mixed-content"
+
+  fun apply(h: TestHelper) =>
+    try
+      let doc = Xml2Doc.createWithRoot("para")?
+      let para = doc.getRootElement()?
+
+      // Add text node
+      para.appendChild(doc.createTextNode("Start ")?)?
+
+      // Add bold element
+      let bold = doc.createElement("b", "bold")?
+      para.appendChild(bold)?
+
+      // Add more text
+      para.appendChild(doc.createTextNode(" end")?)?
+
+      // Verify content concatenation
+      let content = para.getContent()
+      h.assert_eq[String]("Start bold end", content)
+
+      // Verify serialization includes all parts
+      let xml = doc.serialize()?
+      h.assert_true(xml.contains("Start "))
+      h.assert_true(xml.contains("<b>bold</b>"))
+      h.assert_true(xml.contains(" end"))
+    else
+      h.fail("Failed to create mixed content")
+    end
+
+class \nodoc\ iso TestAddChildConvenience is UnitTest
+  """
+  Tests for addChild() convenience method
+  """
+  fun name(): String => "xml2node/add-child-convenience"
+
+  fun apply(h: TestHelper) =>
+    try
+      let doc = Xml2Doc.createWithRoot("root")?
+      let root = doc.getRootElement()?
+
+      // Use addChild convenience method
+      let child1 = root.addChild("item", "first")?
+      let child2 = root.addChild("item", "second")?
+
+      // Set attributes
+      child1.setProp("id", "1")
+      child2.setProp("id", "2")
+
+      // Verify structure using XPath
+      let items = doc.xpathEvalNodes("//item")?
+      h.assert_eq[USize](2, items.size())
+
+      // Verify attributes
+      h.assert_eq[String]("1", items(0)?.getProp("id"))
+      h.assert_eq[String]("2", items(1)?.getProp("id"))
+
+      // Verify content
+      h.assert_eq[String]("first", items(0)?.getContent())
+      h.assert_eq[String]("second", items(1)?.getContent())
+    else
+      h.fail("Failed to use addChild convenience method")
+    end
+
+class \nodoc\ iso TestCreateComment is UnitTest
+  """
+  Tests for comment node creation
+  """
+  fun name(): String => "xml2doc/create-comment"
+
+  fun apply(h: TestHelper) =>
+    try
+      let doc = Xml2Doc.createWithRoot("root")?
+      let root = doc.getRootElement()?
+
+      // Add comment
+      let comment = doc.createComment("This is a comment")?
+      root.appendChild(comment)?
+
+      // Add element
+      let child = doc.createElement("child", "text")?
+      root.appendChild(child)?
+
+      // Add another comment
+      let comment2 = doc.createComment("Another comment")?
+      root.appendChild(comment2)?
+
+      // Verify serialization includes comments
+      let xml = doc.serialize()?
+      h.assert_true(xml.contains("<!--This is a comment-->"))
+      h.assert_true(xml.contains("<!--Another comment-->"))
+      h.assert_true(xml.contains("<child>text</child>"))
+    else
+      h.fail("Failed to create comments")
+    end
+
+class \nodoc\ iso TestComplexDocumentCreation is UnitTest
+  """
+  Tests for creating a more complex document structure
+  """
+  fun name(): String => "xml2doc/complex-creation"
+
+  fun apply(h: TestHelper) =>
+    try
+      // Create HTML-like structure
+      let doc = Xml2Doc.createWithRoot("html")?
+      let html = doc.getRootElement()?
+
+      // Add head
+      let head = html.addChild("head")?
+      let title = head.addChild("title", "Test Page")?
+
+      // Add body
+      let body = html.addChild("body")?
+
+      // Add heading
+      let h1 = body.addChild("h1", "Welcome")?
+
+      // Add paragraph with mixed content
+      let p = body.addChild("p")?
+      p.appendChild(doc.createTextNode("This is ")?)?
+      let em = doc.createElement("em", "emphasized")?
+      p.appendChild(em)?
+      p.appendChild(doc.createTextNode(" text.")?)?
+
+      // Add comment
+      body.appendChild(doc.createComment("End of content")?)?
+
+      // Verify structure using XPath
+      h.assert_eq[USize](1, doc.xpathEvalNodes("//html")?.size())
+      h.assert_eq[USize](1, doc.xpathEvalNodes("//head")?.size())
+      h.assert_eq[USize](1, doc.xpathEvalNodes("//body")?.size())
+      h.assert_eq[USize](1, doc.xpathEvalNodes("//title")?.size())
+      h.assert_eq[USize](1, doc.xpathEvalNodes("//h1")?.size())
+      h.assert_eq[USize](1, doc.xpathEvalNodes("//p")?.size())
+      h.assert_eq[USize](1, doc.xpathEvalNodes("//em")?.size())
+
+      // Verify content
+      h.assert_eq[String]("Test Page", doc.xpathEvalString("string(//title)")?)
+      h.assert_eq[String]("Welcome", doc.xpathEvalString("string(//h1)")?)
+      h.assert_eq[String]("This is emphasized text.", doc.xpathEvalString("string(//p)")?)
+
+      // Verify serialization
+      let xml = doc.serialize()?
+      h.assert_true(xml.contains("<html>"))
+      h.assert_true(xml.contains("<head>"))
+      h.assert_true(xml.contains("<title>Test Page</title>"))
+      h.assert_true(xml.contains("<body>"))
+      h.assert_true(xml.contains("<h1>Welcome</h1>"))
+      h.assert_true(xml.contains("<!--End of content-->"))
+    else
+      h.fail("Failed to create complex document")
     end

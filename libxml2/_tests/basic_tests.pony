@@ -320,3 +320,138 @@ class \nodoc\ iso TestXPathScalarResultsConvenience is UnitTest
     else
       h.fail("Exception in TestXPathScalarResults")
     end
+
+class \nodoc\ iso TestCreateEmptyDocument is UnitTest
+  fun name(): String => "xml2doc/create-empty-document"
+
+  fun apply(h: TestHelper) =>
+    try
+      let doc = Xml2Doc.create()?
+      let xml = doc.serialize()?
+      h.assert_true(xml.contains("<?xml version"))
+    else
+      h.fail("Failed to create empty document")
+    end
+
+class \nodoc\ iso TestCreateDocumentWithRoot is UnitTest
+  fun name(): String => "xml2doc/create-with-root"
+
+  fun apply(h: TestHelper) =>
+    try
+      let doc = Xml2Doc.create()?
+      let root = doc.createElement("root")?
+      doc.setRootElement(root)?
+      let xml = doc.serialize()?
+      h.assert_true(xml.contains("<root"))
+      // Empty elements may be self-closing (<root/>) or explicit (<root></root>)
+      h.assert_true(xml.contains("</root>") or xml.contains("<root/>"))
+    else
+      h.fail("Failed to create document with root")
+    end
+
+class \nodoc\ iso TestCreateAndAppendChildren is UnitTest
+  fun name(): String => "xml2doc/append-children"
+
+  fun apply(h: TestHelper) =>
+    try
+      let doc = Xml2Doc.create()?
+      let root = doc.createElement("root")?
+      doc.setRootElement(root)?
+      let child1 = doc.createElement("child", "Hello")?
+      let child2 = doc.createElement("child", "World")?
+      root.appendChild(child1)?
+      root.appendChild(child2)?
+
+      let xml = doc.serialize()?
+      h.assert_true(xml.contains("<child>Hello</child>"))
+      h.assert_true(xml.contains("<child>World</child>"))
+
+      // Verify XPath works on created documents
+      let children = doc.xpathEvalNodes("//child")?
+      h.assert_eq[USize](2, children.size())
+    else
+      h.fail("Failed to create and append children")
+    end
+
+class \nodoc\ iso TestSetContent is UnitTest
+  fun name(): String => "xml2node/set-content"
+
+  fun apply(h: TestHelper) =>
+    try
+      let doc = Xml2Doc.create()?
+      let root = doc.createElement("root", "initial")?
+      doc.setRootElement(root)?
+      root.setContent("updated")
+      let xml = doc.serialize()?
+      h.assert_true(xml.contains("<root>updated</root>"))
+    else
+      h.fail("Failed to set content")
+    end
+
+class \nodoc\ iso TestCreateAndXPath is UnitTest
+  fun name(): String => "xml2doc/create-and-xpath"
+
+  fun apply(h: TestHelper) =>
+    try
+      let doc = Xml2Doc.create()?
+      let root = doc.createElement("catalog")?
+      doc.setRootElement(root)?
+
+      let book1 = doc.createElement("book")?
+      book1.setProp("id", "bk101")
+      let title1 = doc.createElement("title", "XML Developer's Guide")?
+      book1.appendChild(title1)?
+      root.appendChild(book1)?
+
+      let book2 = doc.createElement("book")?
+      book2.setProp("id", "bk102")
+      let title2 = doc.createElement("title", "Pony Programming")?
+      book2.appendChild(title2)?
+      root.appendChild(book2)?
+
+      // Test XPath queries on created document
+      let books = doc.xpathEvalNodes("//book")?
+      h.assert_eq[USize](2, books.size())
+
+      let titles = doc.xpathEvalNodes("//title")?
+      h.assert_eq[USize](2, titles.size())
+
+      let count = doc.xpathEvalF64("count(//book)")?
+      h.assert_eq[USize](2, count.usize())
+
+      let first_title = doc.xpathEvalString("string(//book[@id='bk101']/title)")?
+      h.assert_eq[String]("XML Developer's Guide", first_title)
+    else
+      h.fail("Failed XPath on created document")
+    end
+
+class \nodoc\ iso TestCreateAndSaveFile is UnitTest
+  fun name(): String => "xml2doc/create-and-save-file"
+
+  fun apply(h: TestHelper) =>
+    try
+      let doc = Xml2Doc.create()?
+      let root = doc.createElement("test")?
+      doc.setRootElement(root)?
+      let child = doc.createElement("child", "content")?
+      root.appendChild(child)?
+
+      // Save to file
+      let auth = FileAuth(h.env.root)
+      doc.saveToFile(auth, "test_created.xml")?
+
+      // Read back and verify
+      let doc2 = Xml2Doc.parseFile(auth, "test_created.xml")?
+      let root2 = doc2.getRootElement()?
+      h.assert_eq[String]("test", root2.name())
+      let children = root2.getChildren()
+      h.assert_eq[USize](1, children.size())
+      h.assert_eq[String]("child", children(0)?.name())
+      h.assert_eq[String]("content", children(0)?.getContent())
+
+      // Clean up test file
+      let fp = FilePath(auth, "test_created.xml")
+      fp.remove()
+    else
+      h.fail("Failed to create and save file")
+    end

@@ -58,6 +58,52 @@ class Xml2Doc
     if ptrx.is_none() then error end
     ptr' = ptrx
 
+  new create(version: String = "1.0") ? =>
+    """
+    Create a new empty XML document with the specified version.
+
+    - `version`: XML version string (default: "1.0")
+
+    Creates an empty document with no root element. Use setRootElement()
+    or createElement() to build the document tree.
+
+    Example:
+      ```pony
+      let doc = Xml2Doc.create()?
+      let root = doc.createElement("root")?
+      doc.setRootElement(root)?
+      ```
+    """
+    let ptrx: NullablePointer[XmlDoc] = LibXML2.xmlNewDoc(version)
+    if ptrx.is_none() then error end
+    ptr' = ptrx
+
+  new createWithRoot(root_name: String, version: String = "1.0") ? =>
+    """
+    Create a new XML document with a root element.
+
+    - `root_name`: Name of the root element
+    - `version`: XML version string (default: "1.0")
+
+    Convenience constructor that creates a document and sets the root
+    element in one step.
+
+    Example:
+      ```pony
+      let doc = Xml2Doc.createWithRoot("root")?
+      let root = doc.getRootElement()?
+      let child = root.addChild("item")?
+      ```
+    """
+    let ptrx: NullablePointer[XmlDoc] = LibXML2.xmlNewDoc(version)
+    if ptrx.is_none() then error end
+    ptr' = ptrx
+
+    let root_ptr = LibXML2.xmlNewDocNode(ptr', NullablePointer[XmlNs].none(),
+                                          root_name, "")
+    if root_ptr.is_none() then error end
+    LibXML2.xmlDocSetRootElement(ptr', root_ptr)
+
   fun xpathEval(
     xpath: String val,
     namespaces: Array[(String val, String val)] = [])
@@ -136,6 +182,93 @@ class Xml2Doc
     """
     let ptrx: NullablePointer[XmlNode] = LibXML2.xmlDocGetRootElement(ptr')
     Xml2Node.fromPTR(recover tag this end, ptrx)?
+
+  fun ref createElement(name: String, content: String = ""): Xml2Node ? =>
+    """
+    Create a new element node belonging to this document.
+
+    - `name`: Element name (tag name)
+    - `content`: Optional text content
+
+    Returns an Xml2Node wrapper. The node is created but not yet attached
+    to the document tree. Use setRootElement() or appendChild() to add it.
+
+    Example:
+      ```pony
+      let doc = Xml2Doc.create()?
+      let elem = doc.createElement("item", "Hello")?
+      elem.setProp("id", "1")
+      ```
+    """
+    let node_ptr = LibXML2.xmlNewDocNode(ptr', NullablePointer[XmlNs].none(),
+                                          name, content)
+    if node_ptr.is_none() then error end
+    Xml2Node.fromPTR(recover tag this end, node_ptr)?
+
+  fun ref setRootElement(root: Xml2Node): Xml2Node ? =>
+    """
+    Set the root element of this document.
+
+    - `root`: The node to set as root element
+
+    Returns the old root element if one existed, otherwise returns the new root.
+    Raises error if the operation fails.
+
+    Example:
+      ```pony
+      let doc = Xml2Doc.create()?
+      let root = doc.createElement("root")?
+      doc.setRootElement(root)?
+      ```
+    """
+    let old_root = LibXML2.xmlDocSetRootElement(ptr', root.ptr')
+    if old_root.is_none() then
+      root  // Return the new root if no previous root existed
+    else
+      Xml2Node.fromPTR(recover tag this end, old_root)?
+    end
+
+  fun ref createTextNode(content: String): Xml2Node ? =>
+    """
+    Create a text node belonging to this document.
+
+    - `content`: Text content
+
+    Text nodes are typically added as children of element nodes to create
+    mixed content (text and elements combined).
+
+    Example:
+      ```pony
+      let doc = Xml2Doc.createWithRoot("para")?
+      let para = doc.getRootElement()?
+      para.appendChild(doc.createTextNode("Some text "))?
+      let bold = doc.createElement("b", "bold")?
+      para.appendChild(bold)?
+      para.appendChild(doc.createTextNode(" more text"))?
+      ```
+    """
+    let node_ptr = LibXML2.xmlNewDocText(ptr', content)
+    if node_ptr.is_none() then error end
+    Xml2Node.fromPTR(recover tag this end, node_ptr)?
+
+  fun ref createComment(content: String): Xml2Node ? =>
+    """
+    Create a comment node belonging to this document.
+
+    - `content`: Comment text (without <!-- --> delimiters)
+
+    Comment nodes can be added to the document tree using appendChild().
+
+    Example:
+      ```pony
+      let doc = Xml2Doc.createWithRoot("root")?
+      let root = doc.getRootElement()?
+      root.appendChild(doc.createComment("This is a comment"))?
+      ```
+    """
+    let node_ptr = LibXML2.xmlNewDocComment(ptr', content)
+    if node_ptr.is_none() then error end
+    Xml2Node.fromPTR(recover tag this end, node_ptr)?
 
   fun serialize(
     format: Bool = true,

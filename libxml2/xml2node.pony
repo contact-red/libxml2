@@ -217,7 +217,7 @@ class Xml2Node
 
   fun ref nodeDump(plevel: I32, pformat: I32): String val =>
     """
-    Serialize this node and its subtree to a string using libxml2’s
+    Serialize this node and its subtree to a string using libxml2's
     `xmlNodeDump`.
 
     - `plevel`: Indentation level to start from when pretty-printing.
@@ -225,8 +225,70 @@ class Xml2Node
       unformatted.
 
     Internally, creates a temporary `xmlBuffer`, dumps the node into it, and
-    returns the buffer’s contents as a Pony `String`.
+    returns the buffer's contents as a Pony `String`.
     """
     var buf: NullablePointer[XmlBuffer] = LibXML2.xmlBufferCreate()
     LibXML2.xmlNodeDump(buf, ptr.doc, ptr', plevel, pformat)
     LibXML2.xmlBufferContent(buf)
+
+  fun ref appendChild(child: Xml2Node): Xml2Node ? =>
+    """
+    Add a child node to this element.
+
+    - `child`: Node to add as child
+
+    Returns the added child node. The child is added at the end of the
+    children list. Raises error if the operation fails.
+
+    Example:
+      ```pony
+      let parent = doc.createElement("parent")?
+      let child = doc.createElement("child")?
+      parent.appendChild(child)?
+      ```
+    """
+    let result = LibXML2.xmlAddChild(ptr', child.ptr')
+    if result.is_none() then error end
+    Xml2Node.fromPTR(xml2doc, result)?
+
+  fun ref setContent(content: String): None =>
+    """
+    Set the text content of this node.
+
+    - `content`: Text content to set
+
+    Replaces any existing content of the node. For elements with children,
+    this will replace all children with a single text node.
+
+    Example:
+      ```pony
+      let elem = doc.createElement("item")?
+      elem.setContent("New content")
+      ```
+    """
+    LibXML2.xmlNodeSetContent(ptr', content)
+
+  fun ref addChild(child_name: String, content: String = ""): Xml2Node ? =>
+    """
+    Convenience method to create and add a child element in one step.
+
+    - `child_name`: Element name for the new child
+    - `content`: Optional text content
+
+    Creates a new child element, adds it to this node, and returns the
+    new child wrapped as Xml2Node.
+
+    Example:
+      ```pony
+      let doc = Xml2Doc.createWithRoot("root")?
+      let root = doc.getRootElement()?
+      let child1 = root.addChild("item", "Hello")?
+      let child2 = root.addChild("item", "World")?
+      child1.setProp("id", "1")
+      child2.setProp("id", "2")
+      ```
+    """
+    let node_ptr = LibXML2.xmlNewChild(ptr', NullablePointer[XmlNs].none(),
+                                        child_name, content)
+    if node_ptr.is_none() then error end
+    Xml2Node.fromPTR(xml2doc, node_ptr)?
