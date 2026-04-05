@@ -5,9 +5,9 @@
   "deps": [],
   "info": {
     "description": "Pony binding to libxml2",
-    "homepage": "https://github.com/redvers/libxml2",
+    "homepage": "https://libxml2.contact.red/",
     "license": "",
-    "documentation_url": "https://redvers.github.io/libxml2/",
+    "documentation_url": "https://libxml2.contact.red",
     "version": "1.1.1",
     "name": ""
   }

@@ -19,15 +19,17 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/ponylang/library-documentation-action-v2:release
     steps:
       - name: Checkout
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v6.0.2
       - name: Generate documentation
-        uses: docker://ponylang/library-documentation-action-v2:release
-        with:
-          site_url: "https://redvers.github.io/libxml2/"
-          library_name: "libxml2"
-          docs_build_dir: "build/libxml2-docs"
+        run: /entrypoint.py
+        env:
+          INPUT_SITE_URL: "https://libxml2.contact.red/"
+          INPUT_LIBRARY_NAME: "libxml2"
+          INPUT_DOCS_BUILD_DIR: "build/libxml2-docs"
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
