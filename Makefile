@@ -52,6 +52,8 @@ $(docs_dir): $(GEN_FILES) $(SOURCE_FILES)
 	rm -rf $(docs_dir)
 	$(GET_DEPENDENCIES_WITH)
 	$(BUILD_DOCS_WITH) --output build $(SRC_DIR)
+	cp -r docs-theme/assets/* $(docs_dir)/docs/assets/
+
 
 docs: $(docs_dir)
 

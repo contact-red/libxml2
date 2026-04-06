@@ -30,6 +30,10 @@ jobs:
           INPUT_SITE_URL: "https://libxml2.contact.red/"
           INPUT_LIBRARY_NAME: "libxml2"
           INPUT_DOCS_BUILD_DIR: "build/libxml2-docs"
+      - name: Apply custom theme
+        run: cp -r docs-theme/assets/* build/libxml2-docs/docs/assets/
+      - name: Rebuild site with custom theme
+        run: cd build/libxml2-docs && mkdocs build
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
