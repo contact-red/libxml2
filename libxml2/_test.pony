@@ -1,4 +1,5 @@
 use "pony_test"
+use "pony_check"
 use "_tests"
 
 actor \nodoc\ Main is TestList
@@ -63,4 +64,12 @@ actor \nodoc\ Main is TestList
     // Regression tests for memory-management fixes
     test(TestXPathResultPostFreeAccess)
     test(TestNodeDumpRepeatedCalls)
+    // Crash-resistance fuzz tests (PonyCheck Property1)
+    test(Property1UnitTest[(String, String)](
+      recover iso FuzzCreateAndCreateElement end))
+    test(Property1UnitTest[(String, String)](
+      recover iso FuzzSetGetProp end))
+    test(Property1UnitTest[String](recover iso FuzzXPathExpression end))
+    test(Property1UnitTest[Array[String]](
+      recover iso FuzzAppendChildChain end))
 
