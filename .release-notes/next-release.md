@@ -142,3 +142,7 @@ Every call to `xpathEval`, `xpathEvalNodes`, `xpathEvalString`, `xpathEvalF64`, 
 
 Every call to `nodeDump` on an `Xml2Node` leaked memory. Long-running processes that repeatedly serialised node subtrees grew without bound. Memory is now reclaimed after each call.
 
+## Fix silent memory leak in serialize on allocator-lookup failure
+
+If libxml2's internal allocator-function lookup ever failed during `serialize`, the call would silently leak the serialised buffer. The call now raises an error in that case rather than continuing on with a no-op free.
+
