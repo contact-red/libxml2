@@ -101,7 +101,12 @@ class Xml2Doc
 
     let root_ptr = LibXML2.xmlNewDocNode(ptr', NullablePointer[XmlNs].none(),
                                           root_name, "")
-    if root_ptr.is_none() then error end
+    if root_ptr.is_none() then
+      // Pony does not call _final on objects whose constructor raised, so
+      // the xmlDoc allocated above would leak. Free it explicitly here.
+      LibXML2.xmlFreeDoc(ptr')
+      error
+    end
     LibXML2.xmlDocSetRootElement(ptr', root_ptr)
 
   fun xpathEval(
@@ -123,6 +128,11 @@ class Xml2Doc
     """
     let tmpctx: NullablePointer[XmlXPathContext] =
       LibXML2.xmlXPathNewContext(ptr')
+    if tmpctx.is_none() then
+      // Context allocation failed (OOM). Passing a null context to
+      // xmlXPathRegisterNs / xmlXPathEval would deref null inside libxml2.
+      return None
+    end
     for (n, url) in namespaces.values() do
       LibXML2.xmlXPathRegisterNs(tmpctx, n, url)
     end
