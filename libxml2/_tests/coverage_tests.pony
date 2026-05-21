@@ -996,3 +996,53 @@ class \nodoc\ iso TestXPathResultPostFreeAccess is UnitTest
     else
       h.fail("Failed to exercise post-free XPath access")
     end
+
+class \nodoc\ iso TestNodeDumpRepeatedCalls is UnitTest
+  """
+  Regression test for the xmlBuffer free in nodeDump.
+
+  Each call allocates a temporary xmlBuffer, dumps into it, copies the
+  content into a Pony String, then frees the buffer. The returned strings
+  must remain intact across subsequent calls (no aliasing into the freed
+  buffer) and must contain the expected content (the copy must happen
+  before the free).
+
+  A regression that freed the buffer before extracting its content would
+  surface here as empty or corrupted strings. The original leak (buffer
+  never freed) is invisible to unit assertions and requires external
+  memory instrumentation to detect.
+  """
+  fun name(): String => "xml2node/nodedump-repeated"
+
+  fun apply(h: TestHelper) =>
+    let xml =
+      "<root><item id=\"a\">alpha</item><item id=\"b\">beta</item></root>"
+    try
+      let doc = Xml2Doc.parseDoc(xml)?
+      let root = doc.getRootElement()?
+      let children = root.getChildren()
+      h.assert_eq[USize](2, children.size())
+
+      // Capture dumps of two siblings, then verify they remain distinct
+      // and intact after subsequent calls allocate fresh buffers.
+      let first_dump: String val = children(0)?.nodeDump(0, 0)
+      let second_dump: String val = children(1)?.nodeDump(0, 0)
+      h.assert_eq[String]("<item id=\"a\">alpha</item>", first_dump)
+      h.assert_eq[String]("<item id=\"b\">beta</item>", second_dump)
+
+      // Sustained loop exercising allocate-and-free across many iterations.
+      var i: USize = 0
+      while i < 200 do
+        let dump = root.nodeDump(0, 0)
+        h.assert_eq[String](
+          "<root><item id=\"a\">alpha</item><item id=\"b\">beta</item></root>",
+          dump)
+        i = i + 1
+      end
+
+      // Earlier captures must still be intact after the loop.
+      h.assert_eq[String]("<item id=\"a\">alpha</item>", first_dump)
+      h.assert_eq[String]("<item id=\"b\">beta</item>", second_dump)
+    else
+      h.fail("Failed to exercise repeated nodeDump")
+    end
