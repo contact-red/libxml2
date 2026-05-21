@@ -919,3 +919,80 @@ class \nodoc\ iso TestComplexDocumentCreation is UnitTest
     else
       h.fail("Failed to create complex document")
     end
+
+class \nodoc\ iso TestXPathResultPostFreeAccess is UnitTest
+  """
+  Regression test for the xmlXPathObject free in Xml2XPathObject.apply.
+
+  After xpathEvalNodes returns, the libxml2 xmlXPathObject (which owned the
+  nodeTab buffer) has been freed. The Xml2Node wrappers we got back must
+  still be safely accessible because their underlying node pointers point
+  into the document, not into the freed XPath object.
+
+  If a regression were to free the XPath object before snapshotting node
+  pointers into the Pony array — or fail to copy stringval before freeing —
+  reading node names/content here would surface as a crash or garbage data.
+  Equivalently, sustained iteration would surface the original leak through
+  external memory monitoring (not asserted here, but the loop count is
+  picked so a missing free would be visible under a profiler).
+  """
+  fun name(): String => "xml2xpathobject/post-free-access"
+
+  fun apply(h: TestHelper) =>
+    let xml =
+      """
+      <root>
+        <item id="a">alpha</item>
+        <item id="b">beta</item>
+        <item id="c">gamma</item>
+        <item id="d">delta</item>
+      </root>
+      """
+    try
+      let doc = Xml2Doc.parseDoc(xml)?
+
+      // 1. Nodeset path: verify every node's name and content are readable
+      //    after xpathEvalNodes returns (post-free correctness check).
+      let nodes = doc.xpathEvalNodes("//item")?
+      h.assert_eq[USize](4, nodes.size())
+      h.assert_eq[String]("item", nodes(0)?.name())
+      h.assert_eq[String]("item", nodes(3)?.name())
+      h.assert_eq[String]("alpha", nodes(0)?.xpathCastNodeToString())
+      h.assert_eq[String]("delta", nodes(3)?.xpathCastNodeToString())
+
+      // 2. Repeated nodeset queries: each call allocates and frees an
+      //    xmlXPathObject. The previously-returned nodes must remain valid
+      //    across subsequent allocations.
+      var i: USize = 0
+      while i < 200 do
+        let again = doc.xpathEvalNodes("//item")?
+        h.assert_eq[USize](4, again.size())
+        h.assert_eq[String]("item", again(0)?.name())
+        i = i + 1
+      end
+      // First batch of nodes must still be readable.
+      h.assert_eq[String]("alpha", nodes(0)?.xpathCastNodeToString())
+
+      // 3. String result path: stringval is owned by the XPath object and
+      //    is freed when the object is freed. The clone must have happened
+      //    before the free.
+      let s1: String = doc.xpathEvalString("string(//item[@id='b'])")?
+      h.assert_eq[String]("beta", s1)
+      // Run repeatedly to surface any free-before-clone regression.
+      var j: USize = 0
+      while j < 200 do
+        let s = doc.xpathEvalString("string(//item[@id='c'])")?
+        h.assert_eq[String]("gamma", s)
+        j = j + 1
+      end
+      // Original string must still be intact.
+      h.assert_eq[String]("beta", s1)
+
+      // 4. Scalar paths (Bool, F64): no buffer to free, but exercise the
+      //    same code path to ensure the unconditional free at the end of
+      //    Xml2XPathObject.apply doesn't crash on these branches.
+      h.assert_eq[F64](4.0, doc.xpathEvalF64("count(//item)")?)
+      h.assert_eq[Bool](true, doc.xpathEvalBool("count(//item) = 4")?)
+    else
+      h.fail("Failed to exercise post-free XPath access")
+    end
