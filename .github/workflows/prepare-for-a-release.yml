@@ -21,33 +21,33 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout main
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v6.0.2
         with:
           ref: "main"
           token: ${{ secrets.RELEASE_TOKEN }}
       - name: Update CHANGELOG.md
-        uses: docker://ghcr.io/ponylang/release-bot-action:0.6.4
+        uses: docker://ghcr.io/ponylang/release-bot-action:0.6.3
         with:
           entrypoint: update-changelog-for-release
         env:
           GIT_USER_NAME: "redvers"
           GIT_USER_EMAIL: "red@contact.red"
       - name: Update VERSION
-        uses: docker://ghcr.io/ponylang/release-bot-action:0.6.4
+        uses: docker://ghcr.io/ponylang/release-bot-action:0.6.3
         with:
           entrypoint: update-version-in-VERSION
         env:
           GIT_USER_NAME: "redvers"
           GIT_USER_EMAIL: "red@contact.red"
       - name: Update version in README
-        uses: docker://ghcr.io/ponylang/release-bot-action:0.6.4
+        uses: docker://ghcr.io/ponylang/release-bot-action:0.6.3
         with:
           entrypoint: update-version-in-README
         env:
           GIT_USER_NAME: "redvers"
           GIT_USER_EMAIL: "red@contact.red"
       - name: Update corral.json
-        uses: docker://ghcr.io/ponylang/release-bot-action:0.6.4
+        uses: docker://ghcr.io/ponylang/release-bot-action:0.6.3
         with:
           entrypoint: update-version-in-corral-json
         env:
@@ -64,12 +64,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout main
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v6.0.2
         with:
           ref: "main"
           token: ${{ secrets.RELEASE_TOKEN }}
       - name: Trigger artefact creation
-        uses: docker://ghcr.io/ponylang/release-bot-action:0.6.4
+        uses: docker://ghcr.io/ponylang/release-bot-action:0.6.3
         with:
           entrypoint: trigger-artefact-creation
         env:
@@ -89,12 +89,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout main
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v6.0.2
         with:
           ref: "main"
           token: ${{ secrets.RELEASE_TOKEN }}
       - name: Add "unreleased" section to CHANGELOG.md
-        uses: docker://ghcr.io/ponylang/release-bot-action:0.6.4
+        uses: docker://ghcr.io/ponylang/release-bot-action:0.6.3
         with:
           entrypoint: add-unreleased-section-to-changelog
         env:
