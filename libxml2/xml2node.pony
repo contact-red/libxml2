@@ -47,10 +47,22 @@ class Xml2Node
     """
     let tmpctx: NullablePointer[XmlXPathContext] =
       LibXML2.xmlXPathNewContext(ptr.doc)
+    if tmpctx.is_none() then
+      // Context allocation failed (OOM). Passing a null context to the
+      // calls below would deref null inside libxml2.
+      return None
+    end
     for (n, url) in namespaces.values() do
       LibXML2.xmlXPathRegisterNs(tmpctx, n, url)
     end
-    LibXML2.xmlXPathSetContextNode(ptr', tmpctx)
+    if LibXML2.xmlXPathSetContextNode(ptr', tmpctx) < 0 then
+      // Failure to set the context node would silently fall back to the
+      // document root, so a query like "./child" would return matches
+      // from the whole document instead of from this node. Free the
+      // context and return None rather than producing wrong results.
+      LibXML2.xmlXPathFreeContext(tmpctx)
+      return None
+    end
     let xptr: NullablePointer[XmlXPathObject] =
       LibXML2.xmlXPathEval(xpath, tmpctx)
     let xpo: Xml2XPathResult = Xml2XPathObject(xml2doc, xptr)
