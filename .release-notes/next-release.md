@@ -146,3 +146,11 @@ Every call to `nodeDump` on an `Xml2Node` leaked memory. Long-running processes 
 
 If libxml2's internal allocator-function lookup ever failed during `serialize`, the call would silently leak the serialised buffer. The call now raises an error in that case rather than continuing on with a no-op free.
 
+## Harden XPath evaluation and createWithRoot against allocation failures
+
+`xpathEval` on both `Xml2Doc` and `Xml2Node` previously dereferenced a null XPath context inside libxml2 if context allocation failed, contradicting the library's "safe from crashes" promise. The methods now return `None` cleanly in that case.
+
+`xpathEval` on `Xml2Node` also silently fell back to the document root if setting the context node failed, so a query like `./child` could return matches from across the whole document. It now returns `None` rather than producing wrong results.
+
+`Xml2Doc.createWithRoot` previously leaked the document if root-element creation failed mid-constructor. The document is now freed before the error is raised.
+
