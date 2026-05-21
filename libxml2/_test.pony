@@ -60,4 +60,6 @@ actor \nodoc\ Main is TestList
     test(TestAddChildConvenience)
     test(TestCreateComment)
     test(TestComplexDocumentCreation)
+    // Regression tests for memory-management fixes
+    test(TestXPathResultPostFreeAccess)
 
