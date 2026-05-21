@@ -224,12 +224,19 @@ class Xml2Node
     - `pformat`: Non-zero to enable formatted (indented) output, zero for
       unformatted.
 
-    Internally, creates a temporary `xmlBuffer`, dumps the node into it, and
-    returns the buffer's contents as a Pony `String`.
+    Internally, creates a temporary `xmlBuffer`, dumps the node into it,
+    copies the buffer's contents into a Pony `String`, then frees the
+    buffer. If `xmlBufferCreate` fails (OOM), returns an empty string
+    rather than passing a null buffer to libxml2.
     """
-    var buf: NullablePointer[XmlBuffer] = LibXML2.xmlBufferCreate()
+    let buf: NullablePointer[XmlBuffer] = LibXML2.xmlBufferCreate()
+    if buf.is_none() then
+      return ""
+    end
     LibXML2.xmlNodeDump(buf, ptr.doc, ptr', plevel, pformat)
-    LibXML2.xmlBufferContent(buf)
+    let result: String val = LibXML2.xmlBufferContent(buf)
+    LibXML2.xmlBufferFree(buf)
+    result
 
   fun ref appendChild(child: Xml2Node): Xml2Node ? =>
     """
