@@ -307,6 +307,11 @@ class Xml2Doc
     var strdupFunc: Pointer[None] = Pointer[None]
     var rc: I32 = @xmlMemGet(addressof freeFunc, addressof mallocFunc, addressof reallocFunc, addressof strdupFunc)
 
+    // If xmlMemGet failed, freeFunc still holds the initial no-op lambda.
+    // Continuing would allocate a libxml2 buffer via the next call and then
+    // silently leak it when freeFunc(c_str) is invoked below. Raise instead.
+    if rc != 0 then error end
+
     // Call xmlDocDumpFormatMemoryEnc
     // format parameter: 1 for formatted, 0 for compact
     let format_val: I32 = if format then I32(1) else I32(0) end
