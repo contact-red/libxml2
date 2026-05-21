@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file. This projec
 - Fixes xmlXPathObject leak in Xml2XPathObject.apply ([PR #28](https://github.com/contact-red/libxml2/pull/28))
 - Fixes memory leak in nodeDump ([PR #29](https://github.com/contact-red/libxml2/pull/29))
 - Fixes silent memory leak in serialize on allocator-lookup failure ([PR #30](https://github.com/contact-red/libxml2/pull/30))
+- Hardens XPath evaluation and createWithRoot against allocation failures ([PR #31](https://github.com/contact-red/libxml2/pull/31))
 
 ### Added
 
