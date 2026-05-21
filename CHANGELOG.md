@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file. This projec
 - Adds convenient methods for xpathEval() ([PR #20](https://github.com/redvers/libxml2/pull/20))
 - Adds serialization API ([PR #25](https://github.com/redvers/libxml2/pull/25))
 - Add document creation API ([PR #27](https://github.com/redvers/libxml2/pull/27))
+- Adds crash-resistance fuzz tests for the Pony API ([PR #32](https://github.com/contact-red/libxml2/pull/32))
 
 ### Changed
 
