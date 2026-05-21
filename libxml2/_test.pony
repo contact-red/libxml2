@@ -62,4 +62,5 @@ actor \nodoc\ Main is TestList
     test(TestComplexDocumentCreation)
     // Regression tests for memory-management fixes
     test(TestXPathResultPostFreeAccess)
+    test(TestNodeDumpRepeatedCalls)
 
