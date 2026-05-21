@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file. This projec
 ### Fixed
 
 - Fixes xmlXPathObject leak in Xml2XPathObject.apply ([PR #28](https://github.com/contact-red/libxml2/pull/28))
+- Fixes memory leak in nodeDump ([PR #29](https://github.com/contact-red/libxml2/pull/29))
 
 ### Added
 
