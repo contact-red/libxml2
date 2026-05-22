@@ -67,6 +67,7 @@ actor \nodoc\ Main is TestList
     // Regression tests for memory-management fixes
     test(TestXPathResultPostFreeAccess)
     test(TestNodeDumpRepeatedCalls)
+    test(TestRepeatedCstringAccessors)
     // Namespace accessors (#33)
     test(TestNamespaceUriAndPrefix)
     test(TestQname)

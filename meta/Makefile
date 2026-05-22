@@ -25,9 +25,8 @@ genfuncs:
 	rm -f `grep -l Valisttag fns/*` && \
 	rm -f `grep -l 'Array\[' fns/*` && \
 	rm -f fns/__* && \
-	echo 'use "lib:xml2"' > ../functions.pony && \
-	echo '' >> ../functions.pony && \
-	echo 'primitive LibXML2' >> ../functions.pony && \
+	rm -f fns/xmlMemGet.fn && \
+	cat ../functions-preamble.pony > ../functions.pony && \
 	cat fns/* >> ../functions.pony
 
 
@@ -47,7 +46,65 @@ castxml2pony_uses:
 	sed -i -e 's/ponyname="xmlBufferWriteCHAR/ponyname="xmlBufferWriteXmlChar/g' use.xml && \
 	sed -i -e 's/<usearg name="recover"/<usearg name="xmlrecover"/g' use.xml && \
 	sed -i -e 's/<usearg name="error"/<usearg name="xmlerror"/g' use.xml && \
+	for fn in $(CONST_RETURN_FNS) ; do \
+	  sed -i "/name=\"$$fn\"/,/>/{s/rv=\"String\"/rv=\"String val\"/}" use.xml ; \
+	done && \
 	echo
+
+# Functions confirmed to return `const xmlChar*` / `const char*` /
+# `const unsigned char*` from libxml2.xml (the castxml output). Their
+# `<use>` entries in use.xml are rewritten to `rv="String val"` so
+# the generator picks the no-free typedef in usetypes.xml. Without
+# this list, the wrapper would emit an `Xml2Free` call on a borrowed
+# pointer and corrupt the libxml2-owned memory it points into.
+#
+# Authoritative source: `grep 'returns="_2695"' libxml2.xml` (and
+# the sibling type IDs for `const char*` / `const unsigned char*`).
+# ICU symbols (ucnv_*, u_errorName_74) are intentionally excluded
+# because they are not wrapped through this generator.
+CONST_RETURN_FNS = \
+  htmlGetMetaEncoding \
+  namePop \
+  xmlBoolToText \
+  xmlBufferContent \
+  xmlCatalogGetPublic \
+  xmlCatalogGetSystem \
+  xmlDictExists \
+  xmlDictLookup \
+  xmlDictQLookup \
+  xmlEncodeEntities \
+  xmlGetCharEncodingName \
+  xmlGetEncodingAlias \
+  xmlNanoHTTPAuthHeader \
+  xmlNanoHTTPEncoding \
+  xmlNanoHTTPMimeType \
+  xmlNanoHTTPRedir \
+  xmlOutputBufferGetContent \
+  xmlParseAttribute \
+  xmlParseEncodingDecl \
+  xmlParseName \
+  xmlParsePITarget \
+  xmlParseStartTag \
+  xmlSAX2GetPublicId \
+  xmlSAX2GetSystemId \
+  xmlSchemaValueGetAsString \
+  xmlSplitQName3 \
+  xmlStrcasestr \
+  xmlStrchr \
+  xmlStrstr \
+  xmlTextReaderConstBaseUri \
+  xmlTextReaderConstEncoding \
+  xmlTextReaderConstLocalName \
+  xmlTextReaderConstName \
+  xmlTextReaderConstNamespaceUri \
+  xmlTextReaderConstPrefix \
+  xmlTextReaderConstString \
+  xmlTextReaderConstValue \
+  xmlTextReaderConstXmlLang \
+  xmlTextReaderConstXmlVersion \
+  xmlThrDefTreeIndentString \
+  xmlUTF8Strpos \
+  xmlXPathNsLookup
 
 castxml2pony_structs:
 	rm -rf structs && \

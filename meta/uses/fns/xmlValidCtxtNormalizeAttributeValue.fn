@@ -16,4 +16,5 @@
   fun xmlValidCtxtNormalizeAttributeValue(ctxt: NullablePointer[XmlValidCtxt] tag, doc: NullablePointer[XmlDoc] tag, elem: NullablePointer[XmlNode] tag, name: String, value: String): String =>
     var pcstring: Pointer[U8] =  @xmlValidCtxtNormalizeAttributeValue(ctxt, doc, elem, name.cstring(), value.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p

@@ -13,4 +13,5 @@
   fun xmlTextReaderGetAttributeNo(reader: NullablePointer[XmlTextReader] tag, no: I32): String =>
     var pcstring: Pointer[U8] =  @xmlTextReaderGetAttributeNo(reader, no)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p

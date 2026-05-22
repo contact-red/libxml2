@@ -12,4 +12,5 @@
   fun xmlBufContent(buf: NullablePointer[XmlBuf] tag): String =>
     var pcstring: Pointer[U8] =  @xmlBufContent(buf)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p

@@ -12,4 +12,5 @@
   fun xmlXPathCastNodeToString(node: NullablePointer[XmlNode] tag): String =>
     var pcstring: Pointer[U8] =  @xmlXPathCastNodeToString(node)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p

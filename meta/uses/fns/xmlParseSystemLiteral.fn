@@ -12,4 +12,5 @@
   fun xmlParseSystemLiteral(ctxt: NullablePointer[XmlParserCtxt] tag): String =>
     var pcstring: Pointer[U8] =  @xmlParseSystemLiteral(ctxt)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p

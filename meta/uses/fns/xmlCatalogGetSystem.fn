@@ -9,7 +9,7 @@
   Arguments:
     [PointerType size=64]->[FundamentalType(unsigned char) size=8]
 */
-  fun xmlCatalogGetSystem(sysID: String): String =>
+  fun xmlCatalogGetSystem(sysID: String): String val =>
     var pcstring: Pointer[U8] =  @xmlCatalogGetSystem(sysID.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p

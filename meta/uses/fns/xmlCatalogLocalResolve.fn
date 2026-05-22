@@ -14,4 +14,5 @@
   fun xmlCatalogLocalResolve(catalogs: Pointer[None] tag, pubID: String, sysID: String): String =>
     var pcstring: Pointer[U8] =  @xmlCatalogLocalResolve(catalogs, pubID.cstring(), sysID.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p

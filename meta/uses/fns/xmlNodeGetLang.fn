@@ -12,4 +12,5 @@
   fun xmlNodeGetLang(cur: NullablePointer[XmlNode] tag): String =>
     var pcstring: Pointer[U8] =  @xmlNodeGetLang(cur)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p

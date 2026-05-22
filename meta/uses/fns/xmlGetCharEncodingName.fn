@@ -9,7 +9,7 @@
   Arguments:
     [Enumeration size=32,fid: f42]
 */
-  fun xmlGetCharEncodingName(enc: I32): String =>
+  fun xmlGetCharEncodingName(enc: I32): String val =>
     var pcstring: Pointer[U8] =  @xmlGetCharEncodingName(enc)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p

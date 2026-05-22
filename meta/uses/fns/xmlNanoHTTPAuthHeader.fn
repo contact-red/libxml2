@@ -9,7 +9,7 @@
   Arguments:
     [PointerType size=64]->[FundamentalType(void) size=0]
 */
-  fun xmlNanoHTTPAuthHeader(ctx: Pointer[None] tag): String =>
+  fun xmlNanoHTTPAuthHeader(ctx: Pointer[None] tag): String val =>
     var pcstring: Pointer[U8] =  @xmlNanoHTTPAuthHeader(ctx)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p

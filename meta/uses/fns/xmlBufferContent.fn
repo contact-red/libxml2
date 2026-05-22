@@ -9,7 +9,7 @@
   Arguments:
     [PointerType size=64]->[Struct size=256,fid: f16]
 */
-  fun xmlBufferContent(buf: NullablePointer[XmlBuffer] tag): String =>
+  fun xmlBufferContent(buf: NullablePointer[XmlBuffer] tag): String val =>
     var pcstring: Pointer[U8] =  @xmlBufferContent(buf)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p

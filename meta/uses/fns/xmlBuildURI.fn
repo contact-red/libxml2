@@ -13,4 +13,5 @@
   fun xmlBuildURI(uRI: String, base: String): String =>
     var pcstring: Pointer[U8] =  @xmlBuildURI(uRI.cstring(), base.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p

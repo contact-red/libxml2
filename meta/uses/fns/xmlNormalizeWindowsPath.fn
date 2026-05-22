@@ -12,4 +12,5 @@
   fun xmlNormalizeWindowsPath(path: String): String =>
     var pcstring: Pointer[U8] =  @xmlNormalizeWindowsPath(path.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p

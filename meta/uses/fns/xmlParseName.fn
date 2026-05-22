@@ -9,7 +9,7 @@
   Arguments:
     [PointerType size=64]->[Struct size=6016,fid: f17]
 */
-  fun xmlParseName(ctxt: NullablePointer[XmlParserCtxt] tag): String =>
+  fun xmlParseName(ctxt: NullablePointer[XmlParserCtxt] tag): String val =>
     var pcstring: Pointer[U8] =  @xmlParseName(ctxt)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p

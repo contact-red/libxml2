@@ -5722,7 +5722,7 @@ use @xmlMemFree[None](ptr: Pointer[None] tag)
     [PointerType size=64]->[PointerType size=64]->[FunctionType]  WRITE MANUALLY
     [PointerType size=64]->[PointerType size=64]->[FunctionType]  WRITE MANUALLY
 */
-use @xmlMemGet[I32](freeFunc: NullablePointer[Pointer[None]] tag, mallocFunc: NullablePointer[Pointer[None]] tag, reallocFunc: NullablePointer[Pointer[None]] tag, strdupFunc: NullablePointer[Pointer[None]] tag)
+use @xmlMemGet[I32](freeFunc: Pointer[XmlFreeFunc] tag, mallocFunc: Pointer[None] tag, reallocFunc: Pointer[None] tag, strdupFunc: Pointer[None] tag)
 
 /*
   Source: /usr/include/libxml2/libxml/xmlmemory.h:153

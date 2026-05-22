@@ -14,4 +14,5 @@
   fun xmlStrncatNew(str1: String, str2: String, len: I32): String =>
     var pcstring: Pointer[U8] =  @xmlStrncatNew(str1.cstring(), str2.cstring(), len)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p

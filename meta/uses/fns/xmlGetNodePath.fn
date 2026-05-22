@@ -12,4 +12,5 @@
   fun xmlGetNodePath(node: NullablePointer[XmlNode] tag): String =>
     var pcstring: Pointer[U8] =  @xmlGetNodePath(node)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p

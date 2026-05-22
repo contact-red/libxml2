@@ -9,7 +9,7 @@
   Arguments:
     [PointerType size=64]->[FundamentalType(void) size=0]
 */
-  fun xmlNanoHTTPEncoding(ctx: Pointer[None] tag): String =>
+  fun xmlNanoHTTPEncoding(ctx: Pointer[None] tag): String val =>
     var pcstring: Pointer[U8] =  @xmlNanoHTTPEncoding(ctx)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p

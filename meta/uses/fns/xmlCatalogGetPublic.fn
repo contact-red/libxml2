@@ -9,7 +9,7 @@
   Arguments:
     [PointerType size=64]->[FundamentalType(unsigned char) size=8]
 */
-  fun xmlCatalogGetPublic(pubID: String): String =>
+  fun xmlCatalogGetPublic(pubID: String): String val =>
     var pcstring: Pointer[U8] =  @xmlCatalogGetPublic(pubID.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p

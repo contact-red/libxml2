@@ -11,7 +11,7 @@
     [PointerType size=64]->[FundamentalType(unsigned char) size=8]
     [PointerType size=64]->[FundamentalType(unsigned char) size=8]
 */
-  fun xmlDictQLookup(dict: NullablePointer[XmlDict] tag, prefix: String, name: String): String =>
+  fun xmlDictQLookup(dict: NullablePointer[XmlDict] tag, prefix: String, name: String): String val =>
     var pcstring: Pointer[U8] =  @xmlDictQLookup(dict, prefix.cstring(), name.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p

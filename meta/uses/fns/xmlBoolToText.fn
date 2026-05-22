@@ -9,7 +9,7 @@
   Arguments:
     [FundamentalType(int) size=32]
 */
-  fun xmlBoolToText(boolval: I32): String =>
+  fun xmlBoolToText(boolval: I32): String val =>
     var pcstring: Pointer[U8] =  @xmlBoolToText(boolval)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p

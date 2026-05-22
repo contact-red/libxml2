@@ -10,7 +10,7 @@
     [PointerType size=64]->[FundamentalType(unsigned char) size=8]
     [FundamentalType(unsigned char) size=8]
 */
-  fun xmlStrchr(str: String, xmlval: U8): String =>
+  fun xmlStrchr(str: String, xmlval: U8): String val =>
     var pcstring: Pointer[U8] =  @xmlStrchr(str.cstring(), xmlval)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p

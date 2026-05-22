@@ -13,6 +13,7 @@
       </prefixs>
       <suffixes>
         <suffix>let p: String iso = String.from_cstring(pcstring).clone()</suffix>
+        <suffix>Xml2Free(pcstring)</suffix>
         <suffix>consume p</suffix>
       </suffixes>
     </ponytypeconvout>
@@ -26,6 +27,25 @@
     structdef="Pointer[Pointer[U8]]"
     argtype="Pointer[Pointer[U8]] tag"
     rvtype="Pointer[Pointer[U8]]"/>
+
+  <typedef name="String val"
+    ponytypein="String val"
+    ponytypeinconv=".cstring()"
+    ponytypeout="String val"
+    structtype="Pointer[U8]"
+    structdef="Pointer[U8]"
+    argtype="Pointer[U8] tag"
+    rvtype="Pointer[U8]">
+    <ponytypeconvout>
+      <prefixs>
+        <prefix>var pcstring: Pointer[U8] = </prefix>
+      </prefixs>
+      <suffixes>
+        <suffix>let p: String iso = String.from_cstring(pcstring).clone()</suffix>
+        <suffix>consume p</suffix>
+      </suffixes>
+    </ponytypeconvout>
+  </typedef>
 
 <typedef name="NullablePointer[XmlCatalog]" ponytypein="NullablePointer[XmlCatalog] tag" ponytypeinconv="" ponytypeout="NullablePointer[XmlCatalog]" structtype="NullablePointer[XmlCatalog]" structdef="NullablePointer[XmlCatalog].none()" argtype="NullablePointer[XmlCatalog] tag" rvtype="NullablePointer[XmlCatalog]" decl="  var "/>
 <typedef name="NullablePointer[XmlList]" ponytypein="NullablePointer[XmlList] tag" ponytypeinconv="" ponytypeout="NullablePointer[XmlList]" structtype="NullablePointer[XmlList]" structdef="NullablePointer[XmlList].none()" argtype="NullablePointer[XmlList] tag" rvtype="NullablePointer[XmlList]" decl="  var "/>
@@ -120,5 +140,7 @@
 <typedef name="U8" ponytypein="U8" ponytypeinconv="" ponytypeout="U8" structtype="U8" structdef="U8(0)" argtype="U8" rvtype="U8" decl="  var "/>
 <typedef name="NullablePointer[XmlPattern]" ponytypein="NullablePointer[XmlPattern] tag" ponytypeinconv="" ponytypeout="NullablePointer[XmlPattern]" structtype="NullablePointer[XmlPattern]" structdef="NullablePointer[XmlPattern].none()" argtype="NullablePointer[XmlPattern] tag" rvtype="NullablePointer[XmlPattern]" decl="  var "/>
 <typedef name="NullablePointer[XmlSchemaParserCtxt]" ponytypein="NullablePointer[XmlSchemaParserCtxt] tag" ponytypeinconv="" ponytypeout="NullablePointer[XmlSchemaParserCtxt]" structtype="NullablePointer[XmlSchemaParserCtxt]" structdef="NullablePointer[XmlSchemaParserCtxt].none()" argtype="NullablePointer[XmlSchemaParserCtxt] tag" rvtype="NullablePointer[XmlSchemaParserCtxt]" decl="  var "/>
-<typedef name="NullablePointer[XmlSAXHandler]" ponytypein="NullablePointer[XmlSAXHandler] tag" ponytypeinconv="" ponytypeout="NullablePointer[XmlSAXHandler]" structtype="NullablePointer[XmlSAXHandler]" structdef="NullablePointer[XmlSAXHandler].none()" argtype="NullablePointer[XmlSAXHandler] tag" rvtype="NullablePointer[XmlSAXHandler]" decl="  var "/></typedefs>
+<typedef name="NullablePointer[XmlSAXHandler]" ponytypein="NullablePointer[XmlSAXHandler] tag" ponytypeinconv="" ponytypeout="NullablePointer[XmlSAXHandler]" structtype="NullablePointer[XmlSAXHandler]" structdef="NullablePointer[XmlSAXHandler].none()" argtype="NullablePointer[XmlSAXHandler] tag" rvtype="NullablePointer[XmlSAXHandler]" decl="  var "/>
+<typedef name="XmlFreeFunc" ponytypein="NullablePointer[XmlSAXHandler] tag" ponytypeinconv="" ponytypeout="NullablePointer[XmlSAXHandler]" structtype="NullablePointer[XmlSAXHandler]" structdef="NullablePointer[XmlSAXHandler].none()" argtype="Pointer[XmlFreeFunc] tag" rvtype="NullablePointer[XmlSAXHandler]" decl="  var "/>
+</typedefs>
 

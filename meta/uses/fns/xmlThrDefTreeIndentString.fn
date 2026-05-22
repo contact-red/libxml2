@@ -9,7 +9,7 @@
   Arguments:
     [PointerType size=64]->[FundamentalType(char) size=8]
 */
-  fun xmlThrDefTreeIndentString(v: String): String =>
+  fun xmlThrDefTreeIndentString(v: String): String val =>
     var pcstring: Pointer[U8] =  @xmlThrDefTreeIndentString(v.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
