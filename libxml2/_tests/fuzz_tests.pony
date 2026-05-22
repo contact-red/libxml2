@@ -35,17 +35,41 @@ use "pony_check"
 //     input into spurious errors: those are swallowed by the inner
 //     `try ... end` by design.
 
-// NOTE: a FuzzParseDoc property was investigated and removed.
-// Feeding random byte strings, unicode_bmp strings, or even pure
-// ascii_letters strings to Xml2Doc.parseDoc reliably segfaults or
-// triggers a `free(): invalid pointer` abort after a handful of
-// failed parses. The crash is cumulative across inputs (a single
-// failed parse passes; ~5-10 distinct failed parses crash) but does
-// not reproduce when the same input is reparsed in a loop. The
-// underlying cause appears to be in libxml2's internal state
-// handling for repeated parse errors. The other fuzz tests below
-// avoid this by exercising APIs other than parseDoc, starting from
-// a fixed valid document or a freshly created one.
+class \nodoc\ iso FuzzParseDoc is Property1[String]
+  """
+  Feed arbitrary byte strings (including invalid UTF-8 and embedded
+  NUL) to `Xml2Parser.parseDoc`. The call must either return a parsed
+  `Xml2Doc` or an `Xml2Error` — never crash the process.
+
+  An earlier incarnation of this property was removed because
+  repeated parse failures triggered cumulative libxml2 state
+  corruption that segfaulted the test binary after ~5–10 distinct
+  failed parses. The new union-returning `Xml2Parser.parseDoc` reads
+  and resets libxml2's per-thread last-error on every failure path
+  (via `Xml2Error.from_last_error()?`'s embedded `xmlResetError`),
+  which appears to clear the state buildup. This property re-tests
+  that invariant.
+  """
+  fun name(): String => "fuzz/parse-doc/property"
+
+  fun gen(): Generator[String] =>
+    // Arbitrary bytes 0..255 inclusive, lengths up to 256. Covers
+    // invalid UTF-8, embedded NUL, and partial XML fragments.
+    Generators.byte_string(Generators.u8(), 0, 256)
+
+  fun ref property(arg1: String, h: PropertyHelper) =>
+    match Xml2Parser.parseDoc(arg1)
+    | let doc: Xml2Doc =>
+      // If parsing succeeded, exercise the doc briefly so any latent
+      // corruption from the parse path surfaces here.
+      try
+        let root = doc.getRootElement()?
+        let _ = root.name()
+        let _ = root.getNodePath()
+      end
+    | let _: Xml2Error => None
+    end
+    h.assert_true(true)
 
 class \nodoc\ iso FuzzCreateAndCreateElement is Property1[(String, String)]
   """
