@@ -68,6 +68,12 @@ actor \nodoc\ Main is TestList
     test(TestNamespaceUriAndPrefix)
     test(TestQname)
     test(TestGetPropNs)
+    // Parser options (#12)
+    test(TestParserOptionsDefaults)
+    test(TestParserOptionsFlagComposition)
+    test(TestParseDocNoBlanks)
+    test(TestParseDocErrorRecovery)
+    test(TestParseDocEntitiesNotSubstitutedByDefault)
     // Crash-resistance fuzz tests (PonyCheck Property1)
     test(Property1UnitTest[(String, String)](
       recover iso FuzzCreateAndCreateElement end))
