@@ -29,32 +29,51 @@ class Xml2Doc
   """
   let ptr': NullablePointer[XmlDoc]
 
-  new parseFile(auth: FileAuth, pfilename: String val) ? =>
+  new parseFile(
+    auth: FileAuth,
+    pfilename: String val,
+    options: Xml2ParserOptions val = Xml2ParserOptions.create()) ?
+  =>
     """
     Parse an XML document from the given file path using libxml2.
 
     - `auth`: Capability proving the caller has permission to read files.
     - `pfilename`: Path to the XML file to parse.
+    - `options`: Parser options controlling network access, entity
+      expansion, whitespace handling, and recovery behaviour. Defaults
+      to a safe-by-default `Xml2ParserOptions` (no network access, no
+      entity substitution). See `Xml2ParserOptions` for the full list.
 
-    On success, stores the underlying `xmlDoc*` in `ptr'` and its non-null
-    value in `ptr`. Raises an error if parsing fails or returns a null
-    document pointer.
+    Routes through libxml2's `xmlReadFile`, which is the
+    options-aware replacement for the legacy `xmlParseFile`. On
+    success, stores the underlying `xmlDoc*` in `ptr'`. Raises an
+    error if parsing fails or returns a null document pointer.
     """
-    let ptrx: NullablePointer[XmlDoc] = LibXML2.xmlParseFile(pfilename)
+    let ptrx: NullablePointer[XmlDoc] =
+      LibXML2.xmlReadFile(pfilename, "", options.to_flags())
     if ptrx.is_none() then error end
     ptr' = ptrx
 
-  new parseDoc(pcur: String val) ? =>
+  new parseDoc(
+    pcur: String val,
+    options: Xml2ParserOptions val = Xml2ParserOptions.create()) ?
+  =>
     """
     Parse an XML document from an in-memory string using libxml2.
 
     - `pcur`: String containing the complete XML document.
+    - `options`: Parser options controlling network access, entity
+      expansion, whitespace handling, and recovery behaviour. Defaults
+      to a safe-by-default `Xml2ParserOptions` (no network access, no
+      entity substitution). See `Xml2ParserOptions` for the full list.
 
-    On success, stores the underlying `xmlDoc*` in `ptr'` and its non-null
-    value in `ptr`. Raises an error if parsing fails or returns a null
-    document pointer.
+    Routes through libxml2's `xmlReadDoc`, which is the options-aware
+    replacement for the legacy `xmlParseDoc`. On success, stores the
+    underlying `xmlDoc*` in `ptr'`. Raises an error if parsing fails
+    or returns a null document pointer.
     """
-    let ptrx: NullablePointer[XmlDoc] = LibXML2.xmlParseDoc(pcur)
+    let ptrx: NullablePointer[XmlDoc] =
+      LibXML2.xmlReadDoc(pcur, "", "", options.to_flags())
     if ptrx.is_none() then error end
     ptr' = ptrx
 
