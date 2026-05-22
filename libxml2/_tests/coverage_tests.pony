@@ -1046,3 +1046,155 @@ class \nodoc\ iso TestNodeDumpRepeatedCalls is UnitTest
     else
       h.fail("Failed to exercise repeated nodeDump")
     end
+
+class \nodoc\ iso TestNamespaceUriAndPrefix is UnitTest
+  """
+  Tests for Xml2Node.namespaceUri() and Xml2Node.namespacePrefix() on
+  elements with no namespace, a default namespace, and a prefixed
+  namespace.
+  """
+  fun name(): String => "xml2node/namespace-uri-and-prefix"
+
+  fun apply(h: TestHelper) =>
+    let xml =
+      """
+      <repository xmlns="http://www.gtk.org/introspection/core/1.0"
+                  xmlns:glib="http://www.gtk.org/introspection/glib/1.0">
+        <class>
+          <method/>
+          <glib:signal/>
+        </class>
+        <namespace-free xmlns=""/>
+      </repository>
+      """
+    try
+      let doc = Xml2Doc.parseDoc(xml)?
+      let repository = doc.getRootElement()?
+      // Root is in the default namespace - URI populated, prefix empty.
+      h.assert_eq[String](
+        "http://www.gtk.org/introspection/core/1.0",
+        repository.namespaceUri())
+      h.assert_eq[String]("", repository.namespacePrefix())
+
+      let children = repository.getChildren()
+      h.assert_eq[USize](2, children.size())
+      let class_node = children(0)?
+      let ns_free = children(1)?
+
+      // <class> inherits the default namespace.
+      h.assert_eq[String](
+        "http://www.gtk.org/introspection/core/1.0",
+        class_node.namespaceUri())
+      h.assert_eq[String]("", class_node.namespacePrefix())
+
+      let class_children = class_node.getChildren()
+      h.assert_eq[USize](2, class_children.size())
+      let method_node = class_children(0)?
+      let signal_node = class_children(1)?
+
+      // <method> is in the default namespace.
+      h.assert_eq[String]("method", method_node.name())
+      h.assert_eq[String](
+        "http://www.gtk.org/introspection/core/1.0",
+        method_node.namespaceUri())
+      h.assert_eq[String]("", method_node.namespacePrefix())
+
+      // <glib:signal> reports the glib URI AND the source-level prefix.
+      h.assert_eq[String]("signal", signal_node.name())
+      h.assert_eq[String](
+        "http://www.gtk.org/introspection/glib/1.0",
+        signal_node.namespaceUri())
+      h.assert_eq[String]("glib", signal_node.namespacePrefix())
+
+      // <namespace-free xmlns=""/> resets the default namespace to none.
+      h.assert_eq[String]("", ns_free.namespaceUri())
+      h.assert_eq[String]("", ns_free.namespacePrefix())
+    else
+      h.fail("Failed to parse XML or access namespace accessors")
+    end
+
+class \nodoc\ iso TestQname is UnitTest
+  """
+  Tests for Xml2Node.qname() returning (namespace_uri, local_name).
+  """
+  fun name(): String => "xml2node/qname"
+
+  fun apply(h: TestHelper) =>
+    let xml =
+      """
+      <root xmlns="http://example.com/default"
+            xmlns:c="http://example.com/c">
+        <plain/>
+        <c:typed/>
+      </root>
+      """
+    try
+      let doc = Xml2Doc.parseDoc(xml)?
+      let root = doc.getRootElement()?
+      let kids = root.getChildren()
+
+      // Direct tuple destructuring at the call site.
+      (let root_uri, let root_local) = root.qname()
+      h.assert_eq[String]("http://example.com/default", root_uri)
+      h.assert_eq[String]("root", root_local)
+
+      (let plain_uri, let plain_local) = kids(0)?.qname()
+      h.assert_eq[String]("http://example.com/default", plain_uri)
+      h.assert_eq[String]("plain", plain_local)
+
+      (let typed_uri, let typed_local) = kids(1)?.qname()
+      h.assert_eq[String]("http://example.com/c", typed_uri)
+      h.assert_eq[String]("typed", typed_local)
+    else
+      h.fail("Failed to parse XML or exercise qname")
+    end
+
+class \nodoc\ iso TestGetPropNs is UnitTest
+  """
+  Tests for Xml2Node.getPropNs(uri, local) resolving namespaced
+  attributes by URI. Verifies that the URI-based lookup works
+  regardless of which source-level prefix the document used to bind
+  the namespace.
+  """
+  fun name(): String => "xml2node/get-prop-ns"
+
+  fun apply(h: TestHelper) =>
+    // Use a non-conventional prefix ("capi" instead of "c") to confirm
+    // that getPropNs locates the attribute via its URI, not its prefix.
+    let xml =
+      """
+      <root xmlns:capi="http://www.gtk.org/introspection/c/1.0">
+        <field name="x" capi:type="gint" capi:identifier="x_field"/>
+      </root>
+      """
+    try
+      let doc = Xml2Doc.parseDoc(xml)?
+      let root = doc.getRootElement()?
+      let field = root.getChildren()(0)?
+
+      // Plain (non-namespaced) attribute still works via getProp.
+      h.assert_eq[String]("x", field.getProp("name"))
+
+      // Namespaced attributes retrieved by URI + local name.
+      h.assert_eq[String](
+        "gint",
+        field.getPropNs(
+          "http://www.gtk.org/introspection/c/1.0", "type"))
+      h.assert_eq[String](
+        "x_field",
+        field.getPropNs(
+          "http://www.gtk.org/introspection/c/1.0", "identifier"))
+
+      // Unknown namespace returns empty string.
+      h.assert_eq[String](
+        "",
+        field.getPropNs("http://not-a-real-namespace/", "type"))
+
+      // Known namespace, unknown local name returns empty string.
+      h.assert_eq[String](
+        "",
+        field.getPropNs(
+          "http://www.gtk.org/introspection/c/1.0", "nope"))
+    else
+      h.fail("Failed to parse XML or exercise getPropNs")
+    end

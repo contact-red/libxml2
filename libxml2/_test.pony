@@ -64,6 +64,10 @@ actor \nodoc\ Main is TestList
     // Regression tests for memory-management fixes
     test(TestXPathResultPostFreeAccess)
     test(TestNodeDumpRepeatedCalls)
+    // Namespace accessors (#33)
+    test(TestNamespaceUriAndPrefix)
+    test(TestQname)
+    test(TestGetPropNs)
     // Crash-resistance fuzz tests (PonyCheck Property1)
     test(Property1UnitTest[(String, String)](
       recover iso FuzzCreateAndCreateElement end))
