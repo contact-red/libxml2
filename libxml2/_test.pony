@@ -95,6 +95,25 @@ actor \nodoc\ Main is TestList
       recover iso PropSetGetPropRoundTrip end))
     test(Property1UnitTest[USize](
       recover iso PropAppendChildPreservesCount end))
+    // Extensive API coverage (batch 2)
+    test(TestXPathAxes)
+    test(TestXPathNumberFunctions)
+    test(TestXPathBooleanFunctions)
+    test(TestXPathAttributePredicates)
+    test(TestCDATAContentPreserved)
+    test(TestSelfClosingEquivalence)
+    test(TestCommentRoundTrip)
+    test(TestSetContentReplacesChildren)
+    test(TestSetUnsetGetPropEmpty)
+    test(TestLongNamesAndValues)
+    test(TestGetLangNestedScopes)
+    test(TestSaveToFileWithFormatAndEncoding)
+    test(Property1UnitTest[Array[String]](
+      recover iso PropStructuralRoundTripStable end))
+    test(Property1UnitTest[USize](
+      recover iso PropGetPropsCardinality end))
+    test(Property1UnitTest[(String, String)](
+      recover iso PropSetUnsetIsEmpty end))
     // Crash-resistance fuzz tests (PonyCheck Property1)
     test(Property1UnitTest[String](recover iso FuzzParseDoc end))
     test(Property1UnitTest[(String, String)](

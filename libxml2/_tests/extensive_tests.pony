@@ -528,3 +528,585 @@ class \nodoc\ iso PropAppendChildPreservesCount is Property1[USize]
       | let _: Xml2Error => h.fail("count() XPath failed")
       end
     } box)
+
+// ---------------------------------------------------------------
+// XPath axes coverage
+// ---------------------------------------------------------------
+
+class \nodoc\ iso TestXPathAxes is UnitTest
+  """
+  Walking the XPath tree with non-default axes: descendant,
+  ancestor, parent, self, following-sibling, preceding-sibling.
+  These produce different node sets than the default child axis
+  and exercise libxml2's traversal beyond simple path expressions.
+  """
+  fun name(): String => "extensive/xpath-axes"
+
+  fun apply(h: TestHelper) =>
+    let xml = "<r><a><b/></a><c><d/></c></r>"
+    match Xml2Parser.parseDoc(xml)
+    | let doc: Xml2Doc =>
+      // descendant axis from /r picks up every element below.
+      match doc.xpathEvalNodes("/r/descendant::*")
+      | let nodes: Array[Xml2Node] =>
+        h.assert_eq[USize](4, nodes.size())
+      | let _: Xml2Error => h.fail("descendant axis failed")
+      end
+      // ancestor of /r//d is r and c.
+      match doc.xpathEvalNodes("//d/ancestor::*")
+      | let nodes: Array[Xml2Node] =>
+        h.assert_eq[USize](2, nodes.size())
+      | let _: Xml2Error => h.fail("ancestor axis failed")
+      end
+      // following-sibling of /r/a is c.
+      match doc.xpathEvalNodes("/r/a/following-sibling::*")
+      | let nodes: Array[Xml2Node] =>
+        h.assert_eq[USize](1, nodes.size())
+        try h.assert_eq[String]("c", nodes(0)?.name()) end
+      | let _: Xml2Error => h.fail("following-sibling axis failed")
+      end
+      // preceding-sibling of /r/c is a.
+      match doc.xpathEvalNodes("/r/c/preceding-sibling::*")
+      | let nodes: Array[Xml2Node] =>
+        h.assert_eq[USize](1, nodes.size())
+        try h.assert_eq[String]("a", nodes(0)?.name()) end
+      | let _: Xml2Error => h.fail("preceding-sibling axis failed")
+      end
+      // parent of /r//b is a.
+      match doc.xpathEvalNodes("//b/parent::*")
+      | let nodes: Array[Xml2Node] =>
+        h.assert_eq[USize](1, nodes.size())
+        try h.assert_eq[String]("a", nodes(0)?.name()) end
+      | let _: Xml2Error => h.fail("parent axis failed")
+      end
+    | let err: Xml2Error =>
+      h.fail("parse failed: " + err.string())
+    end
+
+class \nodoc\ iso TestXPathNumberFunctions is UnitTest
+  """
+  XPath 1.0 number functions: sum, floor, ceiling, round, number.
+  Exercised through xpathEvalF64.
+  """
+  fun name(): String => "extensive/xpath-number-functions"
+
+  fun apply(h: TestHelper) =>
+    let xml =
+      "<r><i p=\"1\"/><i p=\"2\"/><i p=\"3\"/><i p=\"4\"/></r>"
+    match Xml2Parser.parseDoc(xml)
+    | let doc: Xml2Doc =>
+      match doc.xpathEvalF64("sum(/r/i/@p)")
+      | let f: F64 => h.assert_eq[F64](10.0, f)
+      | let _: Xml2Error => h.fail("sum() failed")
+      end
+      match doc.xpathEvalF64("floor(2.7)")
+      | let f: F64 => h.assert_eq[F64](2.0, f)
+      | let _: Xml2Error => h.fail("floor() failed")
+      end
+      match doc.xpathEvalF64("ceiling(2.3)")
+      | let f: F64 => h.assert_eq[F64](3.0, f)
+      | let _: Xml2Error => h.fail("ceiling() failed")
+      end
+      match doc.xpathEvalF64("round(2.5)")
+      | let f: F64 => h.assert_eq[F64](3.0, f)
+      | let _: Xml2Error => h.fail("round() failed")
+      end
+      match doc.xpathEvalF64("number('42')")
+      | let f: F64 => h.assert_eq[F64](42.0, f)
+      | let _: Xml2Error => h.fail("number() failed")
+      end
+    | let err: Xml2Error =>
+      h.fail("parse failed: " + err.string())
+    end
+
+class \nodoc\ iso TestXPathBooleanFunctions is UnitTest
+  """
+  XPath 1.0 boolean functions: true, false, not, boolean.
+  """
+  fun name(): String => "extensive/xpath-boolean-functions"
+
+  fun apply(h: TestHelper) =>
+    match Xml2Parser.parseDoc("<r/>")
+    | let doc: Xml2Doc =>
+      match doc.xpathEvalBool("true()")
+      | let b: Bool => h.assert_eq[Bool](true, b)
+      | let _: Xml2Error => h.fail("true() failed")
+      end
+      match doc.xpathEvalBool("false()")
+      | let b: Bool => h.assert_eq[Bool](false, b)
+      | let _: Xml2Error => h.fail("false() failed")
+      end
+      match doc.xpathEvalBool("not(true())")
+      | let b: Bool => h.assert_eq[Bool](false, b)
+      | let _: Xml2Error => h.fail("not() failed")
+      end
+      match doc.xpathEvalBool("boolean('non-empty')")
+      | let b: Bool => h.assert_eq[Bool](true, b)
+      | let _: Xml2Error => h.fail("boolean('...') failed")
+      end
+      match doc.xpathEvalBool("boolean('')")
+      | let b: Bool => h.assert_eq[Bool](false, b)
+      | let _: Xml2Error => h.fail("boolean('') failed")
+      end
+    | let err: Xml2Error =>
+      h.fail("parse failed: " + err.string())
+    end
+
+class \nodoc\ iso TestXPathAttributePredicates is UnitTest
+  """
+  Attribute predicates: existence (`@id`), equality (`@id='x'`),
+  inequality (`@n != 0`), negation (`not(@id)`), wildcard
+  (`@*`). These are the most common XPath patterns in practice
+  and exercise libxml2's attribute-node handling.
+  """
+  fun name(): String => "extensive/xpath-attribute-predicates"
+
+  fun apply(h: TestHelper) =>
+    let xml =
+      "<r>"
+      + "<i id=\"1\" n=\"5\"/>"
+      + "<i id=\"2\" n=\"0\"/>"
+      + "<i class=\"x\"/>"
+      + "</r>"
+    match Xml2Parser.parseDoc(xml)
+    | let doc: Xml2Doc =>
+      // Existence predicate: two of three <i> have id.
+      match doc.xpathEvalNodes("//i[@id]")
+      | let nodes: Array[Xml2Node] =>
+        h.assert_eq[USize](2, nodes.size())
+      | let _: Xml2Error => h.fail("@id existence failed")
+      end
+      // Equality predicate: one match.
+      match doc.xpathEvalNodes("//i[@id='2']")
+      | let nodes: Array[Xml2Node] =>
+        h.assert_eq[USize](1, nodes.size())
+      | let _: Xml2Error => h.fail("@id='2' failed")
+      end
+      // Inequality + numeric comparison: one match (n=5, not n=0).
+      match doc.xpathEvalNodes("//i[@n != 0]")
+      | let nodes: Array[Xml2Node] =>
+        h.assert_eq[USize](1, nodes.size())
+      | let _: Xml2Error => h.fail("@n != 0 failed")
+      end
+      // Negation: the <i class="x"/> has no @id.
+      match doc.xpathEvalNodes("//i[not(@id)]")
+      | let nodes: Array[Xml2Node] =>
+        h.assert_eq[USize](1, nodes.size())
+      | let _: Xml2Error => h.fail("not(@id) failed")
+      end
+      // Wildcard: every <i> with at least one attribute (all three).
+      match doc.xpathEvalNodes("//i[@*]")
+      | let nodes: Array[Xml2Node] =>
+        h.assert_eq[USize](3, nodes.size())
+      | let _: Xml2Error => h.fail("@* failed")
+      end
+    | let err: Xml2Error =>
+      h.fail("parse failed: " + err.string())
+    end
+
+// ---------------------------------------------------------------
+// XML parser / serialiser semantics
+// ---------------------------------------------------------------
+
+class \nodoc\ iso TestCDATAContentPreserved is UnitTest
+  """
+  Content inside a `<![CDATA[...]]>` section must reach getContent
+  intact (regardless of whether libxml2 represents it as a CDATA
+  node or merges it into adjacent text). The point is the *value*
+  survives, not the representation.
+  """
+  fun name(): String => "extensive/cdata-content-preserved"
+
+  fun apply(h: TestHelper) =>
+    let xml = "<r><![CDATA[<not really a tag> & raw chars]]></r>"
+    match Xml2Parser.parseDoc(xml)
+    | let doc: Xml2Doc =>
+      try
+        let root = doc.getRootElement()?
+        h.assert_eq[String](
+          "<not really a tag> & raw chars",
+          root.getContent())
+      else
+        h.fail("getRootElement failed")
+      end
+    | let err: Xml2Error =>
+      h.fail("parse failed: " + err.string())
+    end
+
+class \nodoc\ iso TestSelfClosingEquivalence is UnitTest
+  """
+  `<a/>` and `<a></a>` are semantically identical per XML 1.0 and
+  must parse to equivalent trees: same parent count, same children
+  count (zero), same name, same content (empty).
+  """
+  fun name(): String => "extensive/self-closing-equivalence"
+
+  fun apply(h: TestHelper) =>
+    let xml_short = "<r><a/></r>"
+    let xml_long  = "<r><a></a></r>"
+    match Xml2Parser.parseDoc(xml_short)
+    | let doc1: Xml2Doc =>
+      match Xml2Parser.parseDoc(xml_long)
+      | let doc2: Xml2Doc =>
+        try
+          let r1 = doc1.getRootElement()?
+          let r2 = doc2.getRootElement()?
+          h.assert_eq[USize](1, r1.getChildren().size())
+          h.assert_eq[USize](1, r2.getChildren().size())
+          let a1 = r1.getChildren()(0)?
+          let a2 = r2.getChildren()(0)?
+          h.assert_eq[String]("a", a1.name())
+          h.assert_eq[String]("a", a2.name())
+          h.assert_eq[USize](0, a1.getChildren().size())
+          h.assert_eq[USize](0, a2.getChildren().size())
+          h.assert_eq[String]("", a1.getContent())
+          h.assert_eq[String]("", a2.getContent())
+        else
+          h.fail("self-closing equivalence traversal failed")
+        end
+      | let err: Xml2Error =>
+        h.fail("long form parse failed: " + err.string())
+      end
+    | let err: Xml2Error =>
+      h.fail("short form parse failed: " + err.string())
+    end
+
+class \nodoc\ iso TestCommentRoundTrip is UnitTest
+  """
+  Comments are preserved by parse → serialize. After re-parsing
+  the serialised output, the comment text must still be visible
+  in another serialise pass. (libxml2 keeps comment nodes in the
+  tree even though `getChildren` filters them out.)
+  """
+  fun name(): String => "extensive/comment-roundtrip"
+
+  fun apply(h: TestHelper) =>
+    let xml = "<r><!-- note --><a/></r>"
+    match Xml2Parser.parseDoc(xml)
+    | let doc: Xml2Doc =>
+      try
+        let s1 = doc.serialize(false)?
+        h.assert_true(
+          s1.contains("<!-- note -->"),
+          "first serialize must preserve comment, got: " + s1)
+        match Xml2Parser.parseDoc(s1)
+        | let doc2: Xml2Doc =>
+          let s2 = doc2.serialize(false)?
+          h.assert_true(
+            s2.contains("<!-- note -->"),
+            "second serialize must still preserve comment, got: " + s2)
+        | let err: Xml2Error =>
+          h.fail("re-parse failed: " + err.string())
+        end
+      else
+        h.fail("serialize failed")
+      end
+    | let err: Xml2Error =>
+      h.fail("parse failed: " + err.string())
+    end
+
+// ---------------------------------------------------------------
+// Mutation semantics
+// ---------------------------------------------------------------
+
+class \nodoc\ iso TestSetContentReplacesChildren is UnitTest
+  """
+  `Xml2Node.setContent` is documented to set the text content of a
+  node. On an element that already has element children, libxml2's
+  `xmlNodeSetContent` removes the existing children and installs
+  the new text. Verify both effects:
+
+    - After setContent, getChildren returns no element children.
+    - After setContent, getContent returns the new text.
+  """
+  fun name(): String => "extensive/set-content-replaces-children"
+
+  fun apply(h: TestHelper) =>
+    match Xml2Parser.parseDoc("<r><a/><b/><c/></r>")
+    | let doc: Xml2Doc =>
+      try
+        let root = doc.getRootElement()?
+        h.assert_eq[USize](3, root.getChildren().size())
+        root.setContent("plain text")
+        h.assert_eq[USize](0, root.getChildren().size())
+        h.assert_eq[String]("plain text", root.getContent())
+      else
+        h.fail("traversal after setContent failed")
+      end
+    | let err: Xml2Error =>
+      h.fail("parse failed: " + err.string())
+    end
+
+class \nodoc\ iso TestSetUnsetGetPropEmpty is UnitTest
+  """
+  setProp followed by unsetProp leaves the attribute absent;
+  getProp on the absent attribute returns the empty string, and
+  the call must not raise.
+  """
+  fun name(): String => "extensive/set-unset-get-prop-empty"
+
+  fun apply(h: TestHelper) =>
+    try
+      let doc = Xml2Doc.createWithRoot("root")?
+      let root = doc.getRootElement()?
+      root.setProp("flag", "on")
+      h.assert_eq[String]("on", root.getProp("flag"))
+      root.unsetProp("flag")
+      h.assert_eq[String]("", root.getProp("flag"))
+      h.assert_eq[USize](0, root.getProps().size())
+    else
+      h.fail("setProp / unsetProp flow failed")
+    end
+
+// ---------------------------------------------------------------
+// Volume / boundary
+// ---------------------------------------------------------------
+
+class \nodoc\ iso TestLongNamesAndValues is UnitTest
+  """
+  Element names of 256 characters and attribute values of 4096
+  characters round-trip cleanly. libxml2 has internal buffer
+  limits but neither of these should exceed them.
+  """
+  fun name(): String => "extensive/long-names-and-values"
+
+  fun apply(h: TestHelper) =>
+    // Build a 256-char element name and a 4096-char value.
+    let long_name: String iso = recover iso String end
+    var i: USize = 0
+    while i < 256 do
+      long_name.push('a')
+      i = i + 1
+    end
+    let stable_name: String val = consume long_name
+    let long_value: String iso = recover iso String end
+    var j: USize = 0
+    while j < 4096 do
+      long_value.push('v')
+      j = j + 1
+    end
+    let stable_value: String val = consume long_value
+
+    try
+      let doc = Xml2Doc.createWithRoot("root")?
+      let root = doc.getRootElement()?
+      let child = doc.createElement(stable_name)?
+      child.setProp("data", stable_value)
+      root.appendChild(child)?
+
+      let serialized = doc.serialize(false)?
+      match Xml2Parser.parseDoc(serialized)
+      | let doc2: Xml2Doc =>
+        let r2 = doc2.getRootElement()?
+        let c2 = r2.getChildren()(0)?
+        h.assert_eq[String](stable_name, c2.name())
+        h.assert_eq[String](stable_value, c2.getProp("data"))
+      | let err: Xml2Error =>
+        h.fail("re-parse of long-name doc failed: " + err.string())
+      end
+    else
+      h.fail("long name/value construction failed")
+    end
+
+// ---------------------------------------------------------------
+// getLang inheritance semantics
+// ---------------------------------------------------------------
+
+class \nodoc\ iso TestGetLangNestedScopes is UnitTest
+  """
+  `xml:lang` declarations are inherited down the tree by default
+  and overridden by a nested `xml:lang`. Verify each child reports
+  the correct in-scope language and that explicit overrides take
+  precedence over the inherited value.
+  """
+  fun name(): String => "extensive/get-lang-nested-scopes"
+
+  fun apply(h: TestHelper) =>
+    let xml =
+      """
+      <r xml:lang="en">
+        <a>
+          <b/>
+        </a>
+        <c xml:lang="fr">
+          <d>
+            <e xml:lang="ja"/>
+          </d>
+        </c>
+      </r>
+      """
+    match Xml2Parser.parseDoc(xml)
+    | let doc: Xml2Doc =>
+      try
+        let r = doc.getRootElement()?
+        h.assert_eq[String]("en", r.getLang())
+        let kids = r.getChildren()
+        let a = kids(0)?
+        let c = kids(1)?
+        h.assert_eq[String]("en", a.getLang())
+        h.assert_eq[String]("fr", c.getLang())
+        let b = a.getChildren()(0)?
+        let d = c.getChildren()(0)?
+        let e = d.getChildren()(0)?
+        // b inherits en from root.
+        h.assert_eq[String]("en", b.getLang())
+        // d inherits fr from c.
+        h.assert_eq[String]("fr", d.getLang())
+        // e overrides with ja.
+        h.assert_eq[String]("ja", e.getLang())
+      else
+        h.fail("nested xml:lang traversal failed")
+      end
+    | let err: Xml2Error =>
+      h.fail("parse failed: " + err.string())
+    end
+
+// ---------------------------------------------------------------
+// saveToFile interaction with format and encoding
+// ---------------------------------------------------------------
+
+class \nodoc\ iso TestSaveToFileWithFormatAndEncoding is UnitTest
+  """
+  `saveToFile` accepts format and encoding parameters. Verify the
+  output file is formatted (indented) when format=true and that
+  the encoding declaration matches when encoding is specified.
+  """
+  fun name(): String => "extensive/save-to-file-format-encoding"
+
+  fun apply(h: TestHelper) =>
+    let path = "/tmp/pony_libxml2_extensive_test.xml"
+    try
+      let doc = Xml2Doc.createWithRoot("root")?
+      let root = doc.getRootElement()?
+      let child = doc.createElement("child", "hello")?
+      root.appendChild(child)?
+
+      let auth = FileAuth(h.env.root)
+      doc.saveToFile(auth, path, true, "ISO-8859-1")?
+
+      // Read the file back and inspect.
+      let fp = FilePath(auth, path)
+      match OpenFile(fp)
+      | let f: File =>
+        let bytes = f.read(8192)
+        let content: String val = String.from_iso_array(consume bytes)
+        f.dispose()
+        fp.remove()
+        // Formatted output has newlines + indentation between root
+        // and child.
+        h.assert_true(
+          content.contains("\n  <child"),
+          "expected formatted indentation in file, got: " + content)
+        // The encoding declaration must reflect the requested
+        // encoding.
+        h.assert_true(
+          content.contains("ISO-8859-1"),
+          "expected encoding declaration in file, got: " + content)
+      else
+        fp.remove()
+        h.fail("could not open file written by saveToFile")
+      end
+    else
+      h.fail("saveToFile flow failed")
+    end
+
+// ---------------------------------------------------------------
+// Additional property-based tests
+// ---------------------------------------------------------------
+
+class \nodoc\ iso PropStructuralRoundTripStable is Property1[Array[String]]
+  """
+  For any list of valid element names, building a document with
+  those names as children of a root and then running it through
+  N parse-serialize cycles produces a structurally stable result:
+  the same number of root children, with the same names, on every
+  cycle. This is the practical "serialise is a stable encoding"
+  property without requiring a full XML AST equality check.
+  """
+  fun name(): String =>
+    "extensive/structural-roundtrip-stable/property"
+
+  fun gen(): Generator[Array[String]] =>
+    Generators.seq_of[String, Array[String]](
+      Generators.ascii_letters(1, 16), 0, 8)
+
+  fun ref property(arg1: Array[String], h: PropertyHelper) =>
+    h.assert_no_error({() ? =>
+      let doc = Xml2Doc.createWithRoot("root")?
+      let root = doc.getRootElement()?
+      for nm in arg1.values() do
+        let c = doc.createElement(nm)?
+        root.appendChild(c)?
+      end
+      // Round-trip three times; assert structure on each cycle.
+      var current: String val = doc.serialize(false)?
+      var i: USize = 0
+      while i < 3 do
+        match Xml2Parser.parseDoc(current)
+        | let d: Xml2Doc =>
+          let r = d.getRootElement()?
+          h.assert_eq[USize](arg1.size(), r.getChildren().size())
+          var j: USize = 0
+          while j < arg1.size() do
+            h.assert_eq[String](
+              arg1(j)?, r.getChildren()(j)?.name())
+            j = j + 1
+          end
+          current = d.serialize(false)?
+        | let _: Xml2Error =>
+          h.fail("re-parse in roundtrip chain failed")
+          return
+        end
+        i = i + 1
+      end
+    } box)
+
+class \nodoc\ iso PropGetPropsCardinality is Property1[USize]
+  """
+  Setting N attributes with distinct names on a root element must
+  yield exactly N entries in `getProps()`. Names are generated from
+  the iteration index (a0, a1, ...) to guarantee uniqueness; the
+  property exercises the cardinality invariant rather than name
+  validity.
+  """
+  fun name(): String => "extensive/getprops-cardinality/property"
+
+  fun gen(): Generator[USize] =>
+    Generators.usize(where min = USize(0), max = USize(40))
+
+  fun ref property(arg1: USize, h: PropertyHelper) =>
+    h.assert_no_error({() ? =>
+      let doc = Xml2Doc.createWithRoot("root")?
+      let root = doc.getRootElement()?
+      var i: USize = 0
+      while i < arg1 do
+        root.setProp("a" + i.string(), "v" + i.string())
+        i = i + 1
+      end
+      h.assert_eq[USize](arg1, root.getProps().size())
+    } box)
+
+class \nodoc\ iso PropSetUnsetIsEmpty is Property1[(String, String)]
+  """
+  For any valid attribute name and printable-ASCII value, the
+  sequence setProp(n,v); unsetProp(n) must leave the attribute
+  absent (getProp returns empty string, getProps reports zero
+  entries).
+  """
+  fun name(): String => "extensive/set-unset-is-empty/property"
+
+  fun gen(): Generator[(String, String)] =>
+    Generators.zip2[String, String](
+      Generators.ascii_letters(1, 32),
+      Generators.ascii_printable(0, 64))
+
+  fun ref property(arg1: (String, String), h: PropertyHelper) =>
+    (let n, let v) = arg1
+    h.assert_no_error({() ? =>
+      let doc = Xml2Doc.createWithRoot("root")?
+      let root = doc.getRootElement()?
+      root.setProp(n, v)
+      root.unsetProp(n)
+      h.assert_eq[String]("", root.getProp(n))
+      h.assert_eq[USize](0, root.getProps().size())
+    } box)
