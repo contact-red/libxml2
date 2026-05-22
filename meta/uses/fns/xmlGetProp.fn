@@ -13,4 +13,5 @@
   fun xmlGetProp(node: NullablePointer[XmlNode] tag, name: String): String =>
     var pcstring: Pointer[U8] =  @xmlGetProp(node, name.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p

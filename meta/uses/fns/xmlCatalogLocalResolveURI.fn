@@ -13,4 +13,5 @@
   fun xmlCatalogLocalResolveURI(catalogs: Pointer[None] tag, uRI: String): String =>
     var pcstring: Pointer[U8] =  @xmlCatalogLocalResolveURI(catalogs, uRI.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p

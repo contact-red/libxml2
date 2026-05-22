@@ -12,4 +12,5 @@
   fun xmlXPathParseName(ctxt: NullablePointer[XmlXPathParserContext] tag): String =>
     var pcstring: Pointer[U8] =  @xmlXPathParseName(ctxt)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p

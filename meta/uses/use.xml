@@ -66,7 +66,7 @@
      ponyname="xmlStrchr"
      fid="f14"
      lineno="55"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="str" type="String"/>
        <usearg name="xmlval" type="U8"/>
@@ -76,7 +76,7 @@
      ponyname="xmlStrstr"
      fid="f14"
      lineno="58"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="str" type="String"/>
        <usearg name="xmlval" type="String"/>
@@ -86,7 +86,7 @@
      ponyname="xmlStrcasestr"
      fid="f14"
      lineno="61"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="str" type="String"/>
        <usearg name="xmlval" type="String"/>
@@ -263,7 +263,7 @@
      ponyname="xmlUTF8Strpos"
      fid="f14"
      lineno="120"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="utf" type="String"/>
        <usearg name="pos" type="I32"/>
@@ -570,7 +570,7 @@
      ponyname="xmlOutputBufferGetContent"
      fid="f15"
      lineno="252"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="out" type="NullablePointer[XmlOutputBuffer]"/>
      </useargs>
@@ -930,7 +930,7 @@
      ponyname="xmlSplitQName3"
      fid="f16"
      lineno="701"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="name" type="String"/>
        <usearg name="len" type="Pointer[I32]"/>
@@ -1082,7 +1082,7 @@
      ponyname="xmlBufferContent"
      fid="f16"
      lineno="751"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="buf" type="NullablePointer[XmlBuffer]"/>
      </useargs>
@@ -3332,7 +3332,7 @@
      ponyname="xmlEncodeEntities"
      fid="f18"
      lineno="116"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="doc" type="NullablePointer[XmlDoc]"/>
        <usearg name="input" type="String"/>
@@ -3591,7 +3591,7 @@
      ponyname="xmlDictLookup"
      fid="f21"
      lineno="53"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="dict" type="NullablePointer[XmlDict]"/>
        <usearg name="name" type="String"/>
@@ -3602,7 +3602,7 @@
      ponyname="xmlDictExists"
      fid="f21"
      lineno="57"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="dict" type="NullablePointer[XmlDict]"/>
        <usearg name="name" type="String"/>
@@ -3613,7 +3613,7 @@
      ponyname="xmlDictQLookup"
      fid="f21"
      lineno="61"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="dict" type="NullablePointer[XmlDict]"/>
        <usearg name="prefix" type="String"/>
@@ -3664,10 +3664,10 @@
      lineno="109"
      rv="I32">
      <useargs>
-       <usearg name="freeFunc" type="NullablePointer[Pointer[None]]"/>
-       <usearg name="mallocFunc" type="NullablePointer[Pointer[None]]"/>
-       <usearg name="reallocFunc" type="NullablePointer[Pointer[None]]"/>
-       <usearg name="strdupFunc" type="NullablePointer[Pointer[None]]"/>
+       <usearg name="freeFunc" type="XmlFreeFunc"/>
+       <usearg name="mallocFunc" type="Pointer[None]"/>
+       <usearg name="reallocFunc" type="Pointer[None]"/>
+       <usearg name="strdupFunc" type="Pointer[None]"/>
      </useargs>
   </use>
   <use id="_515" name="xmlGcMemSetup"
@@ -5674,7 +5674,7 @@
      ponyname="xmlGetEncodingAlias"
      fid="f42"
      lineno="195"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="alias" type="String"/>
      </useargs>
@@ -5699,7 +5699,7 @@
      ponyname="xmlGetCharEncodingName"
      fid="f42"
      lineno="201"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="enc" type="I32"/>
      </useargs>
@@ -5826,7 +5826,7 @@
      ponyname="xmlSAX2GetPublicId"
      fid="f63"
      lineno="25"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="ctx" type="Pointer[None]"/>
      </useargs>
@@ -5835,7 +5835,7 @@
      ponyname="xmlSAX2GetSystemId"
      fid="f63"
      lineno="27"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="ctx" type="Pointer[None]"/>
      </useargs>
@@ -6492,7 +6492,7 @@
      ponyname="xmlThrDefTreeIndentString"
      fid="f64"
      lineno="398"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="v" type="String"/>
      </useargs>
@@ -7392,7 +7392,7 @@
      ponyname="xmlCatalogGetSystem"
      fid="f67"
      lineno="174"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="sysID" type="String"/>
      </useargs>
@@ -7401,7 +7401,7 @@
      ponyname="xmlCatalogGetPublic"
      fid="f67"
      lineno="176"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="pubID" type="String"/>
      </useargs>
@@ -7626,7 +7626,7 @@
      ponyname="xmlBoolToText"
      fid="f69"
      lineno="86"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="boolval" type="I32"/>
      </useargs>
@@ -8228,7 +8228,7 @@
      ponyname="htmlGetMetaEncoding"
      fid="f71"
      lineno="69"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="doc" type="NullablePointer[XmlDoc]"/>
      </useargs>
@@ -8709,7 +8709,7 @@
      ponyname="xmlNanoHTTPAuthHeader"
      fid="f73"
      lineno="56"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="ctx" type="Pointer[None]"/>
      </useargs>
@@ -8718,7 +8718,7 @@
      ponyname="xmlNanoHTTPRedir"
      fid="f73"
      lineno="58"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="ctx" type="Pointer[None]"/>
      </useargs>
@@ -8736,7 +8736,7 @@
      ponyname="xmlNanoHTTPEncoding"
      fid="f73"
      lineno="62"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="ctx" type="Pointer[None]"/>
      </useargs>
@@ -8745,7 +8745,7 @@
      ponyname="xmlNanoHTTPMimeType"
      fid="f73"
      lineno="64"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="ctx" type="Pointer[None]"/>
      </useargs>
@@ -8942,7 +8942,7 @@
      ponyname="xmlParseName"
      fid="f74"
      lineno="391"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="ctxt" type="NullablePointer[XmlParserCtxt]"/>
      </useargs>
@@ -9027,7 +9027,7 @@
      ponyname="xmlParsePITarget"
      fid="f74"
      lineno="413"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="ctxt" type="NullablePointer[XmlParserCtxt]"/>
      </useargs>
@@ -9214,7 +9214,7 @@
      ponyname="xmlParseAttribute"
      fid="f74"
      lineno="463"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="ctxt" type="NullablePointer[XmlParserCtxt]"/>
        <usearg name="value" type="Array[String]"/>
@@ -9224,7 +9224,7 @@
      ponyname="xmlParseStartTag"
      fid="f74"
      lineno="466"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="ctxt" type="NullablePointer[XmlParserCtxt]"/>
      </useargs>
@@ -9296,7 +9296,7 @@
      ponyname="xmlParseEncodingDecl"
      fid="f74"
      lineno="483"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="ctxt" type="NullablePointer[XmlParserCtxt]"/>
      </useargs>
@@ -9419,7 +9419,7 @@
      ponyname="namePop"
      fid="f74"
      lineno="546"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="ctxt" type="NullablePointer[XmlParserCtxt]"/>
      </useargs>
@@ -10868,7 +10868,7 @@
      ponyname="xmlTextReaderConstBaseUri"
      fid="f83"
      lineno="169"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="reader" type="NullablePointer[XmlTextReader]"/>
      </useargs>
@@ -10877,7 +10877,7 @@
      ponyname="xmlTextReaderConstLocalName"
      fid="f83"
      lineno="171"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="reader" type="NullablePointer[XmlTextReader]"/>
      </useargs>
@@ -10886,7 +10886,7 @@
      ponyname="xmlTextReaderConstName"
      fid="f83"
      lineno="173"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="reader" type="NullablePointer[XmlTextReader]"/>
      </useargs>
@@ -10895,7 +10895,7 @@
      ponyname="xmlTextReaderConstNamespaceUri"
      fid="f83"
      lineno="175"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="reader" type="NullablePointer[XmlTextReader]"/>
      </useargs>
@@ -10904,7 +10904,7 @@
      ponyname="xmlTextReaderConstPrefix"
      fid="f83"
      lineno="177"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="reader" type="NullablePointer[XmlTextReader]"/>
      </useargs>
@@ -10913,7 +10913,7 @@
      ponyname="xmlTextReaderConstXmlLang"
      fid="f83"
      lineno="179"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="reader" type="NullablePointer[XmlTextReader]"/>
      </useargs>
@@ -10922,7 +10922,7 @@
      ponyname="xmlTextReaderConstString"
      fid="f83"
      lineno="181"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="reader" type="NullablePointer[XmlTextReader]"/>
        <usearg name="str" type="String"/>
@@ -10932,7 +10932,7 @@
      ponyname="xmlTextReaderConstValue"
      fid="f83"
      lineno="184"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="reader" type="NullablePointer[XmlTextReader]"/>
      </useargs>
@@ -11130,7 +11130,7 @@
      ponyname="xmlTextReaderConstEncoding"
      fid="f83"
      lineno="244"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="reader" type="NullablePointer[XmlTextReader]"/>
      </useargs>
@@ -11314,7 +11314,7 @@
      ponyname="xmlTextReaderConstXmlVersion"
      fid="f83"
      lineno="307"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="reader" type="NullablePointer[XmlTextReader]"/>
      </useargs>
@@ -11910,7 +11910,7 @@
      ponyname="xmlSchemaValueGetAsString"
      fid="f85"
      lineno="124"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="xmlval" type="NullablePointer[XmlSchemaVal]"/>
      </useargs>
@@ -14630,7 +14630,7 @@
      ponyname="xmlXPathNsLookup"
      fid="f88"
      lineno="429"
-     rv="String">
+     rv="String val">
      <useargs>
        <usearg name="ctxt" type="NullablePointer[XmlXPathContext]"/>
        <usearg name="prefix" type="String"/>

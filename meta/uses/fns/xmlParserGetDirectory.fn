@@ -12,4 +12,5 @@
   fun xmlParserGetDirectory(filename: String): String =>
     var pcstring: Pointer[U8] =  @xmlParserGetDirectory(filename.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p

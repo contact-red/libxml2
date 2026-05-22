@@ -10,7 +10,7 @@
     [PointerType size=64]->[FundamentalType(unsigned char) size=8]
     [FundamentalType(int) size=32]
 */
-  fun xmlUTF8Strpos(utf: String, pos: I32): String =>
+  fun xmlUTF8Strpos(utf: String, pos: I32): String val =>
     var pcstring: Pointer[U8] =  @xmlUTF8Strpos(utf.cstring(), pos)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p

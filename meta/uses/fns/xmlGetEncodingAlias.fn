@@ -9,7 +9,7 @@
   Arguments:
     [PointerType size=64]->[FundamentalType(char) size=8]
 */
-  fun xmlGetEncodingAlias(alias: String): String =>
+  fun xmlGetEncodingAlias(alias: String): String val =>
     var pcstring: Pointer[U8] =  @xmlGetEncodingAlias(alias.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p

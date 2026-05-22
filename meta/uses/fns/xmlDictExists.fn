@@ -11,7 +11,7 @@
     [PointerType size=64]->[FundamentalType(unsigned char) size=8]
     [FundamentalType(int) size=32]
 */
-  fun xmlDictExists(dict: NullablePointer[XmlDict] tag, name: String, len: I32): String =>
+  fun xmlDictExists(dict: NullablePointer[XmlDict] tag, name: String, len: I32): String val =>
     var pcstring: Pointer[U8] =  @xmlDictExists(dict, name.cstring(), len)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p

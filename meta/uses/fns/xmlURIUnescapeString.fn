@@ -14,4 +14,5 @@
   fun xmlURIUnescapeString(str: String, len: I32, target: String): String =>
     var pcstring: Pointer[U8] =  @xmlURIUnescapeString(str.cstring(), len, target.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p

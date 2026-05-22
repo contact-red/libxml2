@@ -9,7 +9,7 @@
   Arguments:
     [PointerType size=64]->[Struct size=1408,fid: f16]
 */
-  fun htmlGetMetaEncoding(doc: NullablePointer[XmlDoc] tag): String =>
+  fun htmlGetMetaEncoding(doc: NullablePointer[XmlDoc] tag): String val =>
     var pcstring: Pointer[U8] =  @htmlGetMetaEncoding(doc)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p

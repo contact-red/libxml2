@@ -8,19 +8,17 @@ use "debug"
  * only valid in direct FFI calls.
  */
 
-use @xmlMemGet[I32](
-  freeFunc: Pointer[XmlFreeFunc] tag,
-  mallocFunc: Pointer[Pointer[None]] tag,  // Unused, so not defining
-  reallocFunc: Pointer[Pointer[None]] tag, // Unused, so not defining
-  strdupFunc: Pointer[Pointer[None]] tag)  // Unused, so not defining
+// The `XmlFreeFunc` type is now provided by the `raw/` subpackage
+// (imported via `use "raw"` above). The `@xmlMemGet` FFI symbol is
+// declared per-package, so we redeclare it here for `serialize()`'s
+// allocator lookup.
+
 use @xmlDocDumpFormatMemoryEnc[None](
   outdoc: NullablePointer[XmlDoc] tag,
   doctxtptr: Pointer[Pointer[U8]] tag,
   doctxtlen: Pointer[I32] tag,
   txtencoding: Pointer[U8] tag,
   format: I32)
-
-type XmlFreeFunc is @{(Pointer[None] tag): None}
 
 class Xml2Doc
   """
@@ -304,20 +302,6 @@ class Xml2Doc
     var c_str: Pointer[U8] ref = Pointer[U8]
     var size: I32 = 0
 
-//  The function to free is available as a function pointer from
-//  the xmlMemGet function. We allocate a variable for it and
-//  pass the address of that to the function:
-    var freeFunc: XmlFreeFunc = @{(p: Pointer[None] tag) => None}
-    var mallocFunc: Pointer[None] = Pointer[None]
-    var reallocFunc: Pointer[None] = Pointer[None]
-    var strdupFunc: Pointer[None] = Pointer[None]
-    var rc: I32 = @xmlMemGet(addressof freeFunc, addressof mallocFunc, addressof reallocFunc, addressof strdupFunc)
-
-    // If xmlMemGet failed, freeFunc still holds the initial no-op lambda.
-    // Continuing would allocate a libxml2 buffer via the next call and then
-    // silently leak it when freeFunc(c_str) is invoked below. Raise instead.
-    if rc != 0 then error end
-
     // Call xmlDocDumpFormatMemoryEnc
     // format parameter: 1 for formatted, 0 for compact
     let format_val: I32 = if format then I32(1) else I32(0) end
@@ -336,7 +320,7 @@ class Xml2Doc
 
     // FREE THE MEMORY (critical!)
     // Call the function pointer we retrieved earlier.
-    freeFunc(c_str)
+    Xml2Free(c_str)
 
     // Return the cloned string
     consume result

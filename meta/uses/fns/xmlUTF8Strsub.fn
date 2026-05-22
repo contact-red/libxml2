@@ -14,4 +14,5 @@
   fun xmlUTF8Strsub(utf: String, start: I32, len: I32): String =>
     var pcstring: Pointer[U8] =  @xmlUTF8Strsub(utf.cstring(), start, len)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p

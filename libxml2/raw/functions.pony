@@ -1,5 +1,34 @@
 use "lib:xml2"
 
+type XmlFreeFunc is @{(Pointer[None] tag): None}
+
+primitive Xml2Free
+  """
+  Apply libxml2's configured free function to a heap-allocated
+  `xmlChar*` / `void*` pointer. Used internally by the auto-generated
+  `LibXML2` wrappers below to free pointers returned by libxml2
+  functions like `xmlGetProp` / `xmlNodeGetContent` after the bytes
+  have been cloned into Pony memory. Retrieves the allocator through
+  `xmlMemGet` so application-installed allocators via `xmlMemSetup`
+  are honoured. A null pointer is a no-op.
+  """
+  fun tag apply(p: Pointer[U8]) =>
+    if p.is_null() then return end
+    var free_func: XmlFreeFunc = @{(q: Pointer[None] tag) => None}
+    var malloc_func: Pointer[None] = Pointer[None]
+    var realloc_func: Pointer[None] = Pointer[None]
+    var strdup_func: Pointer[None] = Pointer[None]
+    if @xmlMemGet(
+      addressof free_func, addressof malloc_func,
+      addressof realloc_func, addressof strdup_func) == 0
+    then
+      free_func(p)
+    end
+    // If xmlMemGet fails (extremely rare; allocator-lookup failure),
+    // free_func remains the no-op lambda. The leak in that
+    // pathological case is acceptable; the alternative would be a
+    // call through an uninitialised function pointer.
+
 primitive LibXML2
 
 
@@ -387,7 +416,7 @@ primitive LibXML2
   Arguments:
     [PointerType size=64]->[Struct size=1408,fid: f16]
 */
-  fun htmlGetMetaEncoding(doc: NullablePointer[XmlDoc] tag): String =>
+  fun htmlGetMetaEncoding(doc: NullablePointer[XmlDoc] tag): String val =>
     var pcstring: Pointer[U8] =  @htmlGetMetaEncoding(doc)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -926,7 +955,7 @@ primitive LibXML2
   Arguments:
     [PointerType size=64]->[Struct size=6016,fid: f17]
 */
-  fun namePop(ctxt: NullablePointer[XmlParserCtxt] tag): String =>
+  fun namePop(ctxt: NullablePointer[XmlParserCtxt] tag): String val =>
     var pcstring: Pointer[U8] =  @namePop(ctxt)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -1122,6 +1151,7 @@ primitive LibXML2
   fun xmlACatalogResolve(catal: NullablePointer[XmlCatalog] tag, pubID: String, sysID: String): String =>
     var pcstring: Pointer[U8] =  @xmlACatalogResolve(catal, pubID.cstring(), sysID.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -1138,6 +1168,7 @@ primitive LibXML2
   fun xmlACatalogResolvePublic(catal: NullablePointer[XmlCatalog] tag, pubID: String): String =>
     var pcstring: Pointer[U8] =  @xmlACatalogResolvePublic(catal, pubID.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -1154,6 +1185,7 @@ primitive LibXML2
   fun xmlACatalogResolveSystem(catal: NullablePointer[XmlCatalog] tag, sysID: String): String =>
     var pcstring: Pointer[U8] =  @xmlACatalogResolveSystem(catal, sysID.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -1170,6 +1202,7 @@ primitive LibXML2
   fun xmlACatalogResolveURI(catal: NullablePointer[XmlCatalog] tag, uRI: String): String =>
     var pcstring: Pointer[U8] =  @xmlACatalogResolveURI(catal, uRI.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -1706,7 +1739,7 @@ primitive LibXML2
   Arguments:
     [FundamentalType(int) size=32]
 */
-  fun xmlBoolToText(boolval: I32): String =>
+  fun xmlBoolToText(boolval: I32): String val =>
     var pcstring: Pointer[U8] =  @xmlBoolToText(boolval)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -1724,6 +1757,7 @@ primitive LibXML2
   fun xmlBufContent(buf: NullablePointer[XmlBuf] tag): String =>
     var pcstring: Pointer[U8] =  @xmlBufContent(buf)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -1739,6 +1773,7 @@ primitive LibXML2
   fun xmlBufEnd(buf: NullablePointer[XmlBuf] tag): String =>
     var pcstring: Pointer[U8] =  @xmlBufEnd(buf)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -1867,7 +1902,7 @@ primitive LibXML2
   Arguments:
     [PointerType size=64]->[Struct size=256,fid: f16]
 */
-  fun xmlBufferContent(buf: NullablePointer[XmlBuffer] tag): String =>
+  fun xmlBufferContent(buf: NullablePointer[XmlBuffer] tag): String val =>
     var pcstring: Pointer[U8] =  @xmlBufferContent(buf)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -1924,6 +1959,7 @@ primitive LibXML2
   fun xmlBufferDetach(buf: NullablePointer[XmlBuffer] tag): String =>
     var pcstring: Pointer[U8] =  @xmlBufferDetach(buf)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -2093,6 +2129,7 @@ primitive LibXML2
   fun xmlBuildQName(ncname: String, prefix: String, memory: String, len: I32): String =>
     var pcstring: Pointer[U8] =  @xmlBuildQName(ncname.cstring(), prefix.cstring(), memory.cstring(), len)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -2109,6 +2146,7 @@ primitive LibXML2
   fun xmlBuildRelativeURI(uRI: String, base: String): String =>
     var pcstring: Pointer[U8] =  @xmlBuildRelativeURI(uRI.cstring(), base.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -2125,6 +2163,7 @@ primitive LibXML2
   fun xmlBuildURI(uRI: String, base: String): String =>
     var pcstring: Pointer[U8] =  @xmlBuildURI(uRI.cstring(), base.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -2153,6 +2192,7 @@ primitive LibXML2
   fun xmlCanonicPath(path: String): String =>
     var pcstring: Pointer[U8] =  @xmlCanonicPath(path.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -2256,7 +2296,7 @@ primitive LibXML2
   Arguments:
     [PointerType size=64]->[FundamentalType(unsigned char) size=8]
 */
-  fun xmlCatalogGetPublic(pubID: String): String =>
+  fun xmlCatalogGetPublic(pubID: String): String val =>
     var pcstring: Pointer[U8] =  @xmlCatalogGetPublic(pubID.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -2271,7 +2311,7 @@ primitive LibXML2
   Arguments:
     [PointerType size=64]->[FundamentalType(unsigned char) size=8]
 */
-  fun xmlCatalogGetSystem(sysID: String): String =>
+  fun xmlCatalogGetSystem(sysID: String): String val =>
     var pcstring: Pointer[U8] =  @xmlCatalogGetSystem(sysID.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -2304,6 +2344,7 @@ primitive LibXML2
   fun xmlCatalogLocalResolve(catalogs: Pointer[None] tag, pubID: String, sysID: String): String =>
     var pcstring: Pointer[U8] =  @xmlCatalogLocalResolve(catalogs, pubID.cstring(), sysID.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -2320,6 +2361,7 @@ primitive LibXML2
   fun xmlCatalogLocalResolveURI(catalogs: Pointer[None] tag, uRI: String): String =>
     var pcstring: Pointer[U8] =  @xmlCatalogLocalResolveURI(catalogs, uRI.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -2349,6 +2391,7 @@ primitive LibXML2
   fun xmlCatalogResolve(pubID: String, sysID: String): String =>
     var pcstring: Pointer[U8] =  @xmlCatalogResolve(pubID.cstring(), sysID.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -2364,6 +2407,7 @@ primitive LibXML2
   fun xmlCatalogResolvePublic(pubID: String): String =>
     var pcstring: Pointer[U8] =  @xmlCatalogResolvePublic(pubID.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -2379,6 +2423,7 @@ primitive LibXML2
   fun xmlCatalogResolveSystem(sysID: String): String =>
     var pcstring: Pointer[U8] =  @xmlCatalogResolveSystem(sysID.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -2394,6 +2439,7 @@ primitive LibXML2
   fun xmlCatalogResolveURI(uRI: String): String =>
     var pcstring: Pointer[U8] =  @xmlCatalogResolveURI(uRI.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -2520,6 +2566,7 @@ primitive LibXML2
   fun xmlCharStrdup(cur: String): String =>
     var pcstring: Pointer[U8] =  @xmlCharStrdup(cur.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -2536,6 +2583,7 @@ primitive LibXML2
   fun xmlCharStrndup(cur: String, len: I32): String =>
     var pcstring: Pointer[U8] =  @xmlCharStrndup(cur.cstring(), len)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -3606,6 +3654,7 @@ primitive LibXML2
   fun xmlDecodeEntities(ctxt: NullablePointer[XmlParserCtxt] tag, len: I32, what: I32, xmlend: U8, end2: U8, end3: U8): String =>
     var pcstring: Pointer[U8] =  @xmlDecodeEntities(ctxt, len, what, xmlend, end2, end3)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -3709,7 +3758,7 @@ primitive LibXML2
     [PointerType size=64]->[FundamentalType(unsigned char) size=8]
     [FundamentalType(int) size=32]
 */
-  fun xmlDictExists(dict: NullablePointer[XmlDict] tag, name: String, len: I32): String =>
+  fun xmlDictExists(dict: NullablePointer[XmlDict] tag, name: String, len: I32): String val =>
     var pcstring: Pointer[U8] =  @xmlDictExists(dict, name.cstring(), len)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -3752,7 +3801,7 @@ primitive LibXML2
     [PointerType size=64]->[FundamentalType(unsigned char) size=8]
     [FundamentalType(int) size=32]
 */
-  fun xmlDictLookup(dict: NullablePointer[XmlDict] tag, name: String, len: I32): String =>
+  fun xmlDictLookup(dict: NullablePointer[XmlDict] tag, name: String, len: I32): String val =>
     var pcstring: Pointer[U8] =  @xmlDictLookup(dict, name.cstring(), len)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -3783,7 +3832,7 @@ primitive LibXML2
     [PointerType size=64]->[FundamentalType(unsigned char) size=8]
     [PointerType size=64]->[FundamentalType(unsigned char) size=8]
 */
-  fun xmlDictQLookup(dict: NullablePointer[XmlDict] tag, prefix: String, name: String): String =>
+  fun xmlDictQLookup(dict: NullablePointer[XmlDict] tag, prefix: String, name: String): String val =>
     var pcstring: Pointer[U8] =  @xmlDictQLookup(dict, prefix.cstring(), name.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -4051,7 +4100,7 @@ primitive LibXML2
     [PointerType size=64]->[Struct size=1408,fid: f16]
     [PointerType size=64]->[FundamentalType(unsigned char) size=8]
 */
-  fun xmlEncodeEntities(doc: NullablePointer[XmlDoc] tag, input: String): String =>
+  fun xmlEncodeEntities(doc: NullablePointer[XmlDoc] tag, input: String): String val =>
     var pcstring: Pointer[U8] =  @xmlEncodeEntities(doc, input.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -4070,6 +4119,7 @@ primitive LibXML2
   fun xmlEncodeEntitiesReentrant(doc: NullablePointer[XmlDoc] tag, input: String): String =>
     var pcstring: Pointer[U8] =  @xmlEncodeEntitiesReentrant(doc, input.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -4086,6 +4136,7 @@ primitive LibXML2
   fun xmlEncodeSpecialChars(doc: NullablePointer[XmlDoc] tag, input: String): String =>
     var pcstring: Pointer[U8] =  @xmlEncodeSpecialChars(doc, input.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -4641,7 +4692,7 @@ primitive LibXML2
   Arguments:
     [Enumeration size=32,fid: f42]
 */
-  fun xmlGetCharEncodingName(enc: I32): String =>
+  fun xmlGetCharEncodingName(enc: I32): String val =>
     var pcstring: Pointer[U8] =  @xmlGetCharEncodingName(enc)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -4783,7 +4834,7 @@ primitive LibXML2
   Arguments:
     [PointerType size=64]->[FundamentalType(char) size=8]
 */
-  fun xmlGetEncodingAlias(alias: String): String =>
+  fun xmlGetEncodingAlias(alias: String): String val =>
     var pcstring: Pointer[U8] =  @xmlGetEncodingAlias(alias.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -4906,6 +4957,7 @@ primitive LibXML2
   fun xmlGetNoNsProp(node: NullablePointer[XmlNode] tag, name: String): String =>
     var pcstring: Pointer[U8] =  @xmlGetNoNsProp(node, name.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -4921,6 +4973,7 @@ primitive LibXML2
   fun xmlGetNodePath(node: NullablePointer[XmlNode] tag): String =>
     var pcstring: Pointer[U8] =  @xmlGetNodePath(node)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -4952,6 +5005,7 @@ primitive LibXML2
   fun xmlGetNsProp(node: NullablePointer[XmlNode] tag, name: String, nameSpace: String): String =>
     var pcstring: Pointer[U8] =  @xmlGetNsProp(node, name.cstring(), nameSpace.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -4995,6 +5049,7 @@ primitive LibXML2
   fun xmlGetProp(node: NullablePointer[XmlNode] tag, name: String): String =>
     var pcstring: Pointer[U8] =  @xmlGetProp(node, name.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -6539,22 +6594,6 @@ primitive LibXML2
 
 
 /*
-  Source: /usr/include/libxml2/libxml/xmlmemory.h:109
-  Original Name: xmlMemGet/usr/include/libxml2/libxml/xmlmemory.h:109
-
-  Return Value: [FundamentalType(int) size=32]
-
-  Arguments:
-    [PointerType size=64]->[PointerType size=64]->[FunctionType]  WRITE MANUALLY
-    [PointerType size=64]->[PointerType size=64]->[FunctionType]  WRITE MANUALLY
-    [PointerType size=64]->[PointerType size=64]->[FunctionType]  WRITE MANUALLY
-    [PointerType size=64]->[PointerType size=64]->[FunctionType]  WRITE MANUALLY
-*/
-  fun xmlMemGet(freeFunc: NullablePointer[Pointer[None]] tag, mallocFunc: NullablePointer[Pointer[None]] tag, reallocFunc: NullablePointer[Pointer[None]] tag, strdupFunc: NullablePointer[Pointer[None]] tag): I32 =>
-    @xmlMemGet(freeFunc, mallocFunc, reallocFunc, strdupFunc)
-
-
-/*
   Source: /usr/include/libxml2/libxml/xmlmemory.h:153
   Original Name: xmlMemMalloc/usr/include/libxml2/libxml/xmlmemory.h:153
 
@@ -6625,6 +6664,7 @@ primitive LibXML2
   fun xmlMemStrdupLoc(str: String, file: String, line: I32): String =>
     var pcstring: Pointer[U8] =  @xmlMemStrdupLoc(str.cstring(), file.cstring(), line)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -6664,6 +6704,7 @@ primitive LibXML2
   fun xmlMemoryStrdup(str: String): String =>
     var pcstring: Pointer[U8] =  @xmlMemoryStrdup(str.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -6760,6 +6801,7 @@ primitive LibXML2
   fun xmlNamespaceParseNCName(ctxt: NullablePointer[XmlParserCtxt] tag): String =>
     var pcstring: Pointer[U8] =  @xmlNamespaceParseNCName(ctxt)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -6775,6 +6817,7 @@ primitive LibXML2
   fun xmlNamespaceParseNSDef(ctxt: NullablePointer[XmlParserCtxt] tag): String =>
     var pcstring: Pointer[U8] =  @xmlNamespaceParseNSDef(ctxt)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -7088,7 +7131,7 @@ primitive LibXML2
   Arguments:
     [PointerType size=64]->[FundamentalType(void) size=0]
 */
-  fun xmlNanoHTTPAuthHeader(ctx: Pointer[None] tag): String =>
+  fun xmlNanoHTTPAuthHeader(ctx: Pointer[None] tag): String val =>
     var pcstring: Pointer[U8] =  @xmlNanoHTTPAuthHeader(ctx)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -7141,7 +7184,7 @@ primitive LibXML2
   Arguments:
     [PointerType size=64]->[FundamentalType(void) size=0]
 */
-  fun xmlNanoHTTPEncoding(ctx: Pointer[None] tag): String =>
+  fun xmlNanoHTTPEncoding(ctx: Pointer[None] tag): String val =>
     var pcstring: Pointer[U8] =  @xmlNanoHTTPEncoding(ctx)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -7168,7 +7211,7 @@ primitive LibXML2
   Arguments:
     [PointerType size=64]->[FundamentalType(void) size=0]
 */
-  fun xmlNanoHTTPMimeType(ctx: Pointer[None] tag): String =>
+  fun xmlNanoHTTPMimeType(ctx: Pointer[None] tag): String val =>
     var pcstring: Pointer[U8] =  @xmlNanoHTTPMimeType(ctx)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -7198,7 +7241,7 @@ primitive LibXML2
   Arguments:
     [PointerType size=64]->[FundamentalType(void) size=0]
 */
-  fun xmlNanoHTTPRedir(ctx: Pointer[None] tag): String =>
+  fun xmlNanoHTTPRedir(ctx: Pointer[None] tag): String val =>
     var pcstring: Pointer[U8] =  @xmlNanoHTTPRedir(ctx)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -8089,6 +8132,7 @@ primitive LibXML2
   fun xmlNodeGetBase(doc: NullablePointer[XmlDoc] tag, cur: NullablePointer[XmlNode] tag): String =>
     var pcstring: Pointer[U8] =  @xmlNodeGetBase(doc, cur)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -8104,6 +8148,7 @@ primitive LibXML2
   fun xmlNodeGetContent(cur: NullablePointer[XmlNode] tag): String =>
     var pcstring: Pointer[U8] =  @xmlNodeGetContent(cur)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -8119,6 +8164,7 @@ primitive LibXML2
   fun xmlNodeGetLang(cur: NullablePointer[XmlNode] tag): String =>
     var pcstring: Pointer[U8] =  @xmlNodeGetLang(cur)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -8162,6 +8208,7 @@ primitive LibXML2
   fun xmlNodeListGetRawString(doc: NullablePointer[XmlDoc] tag, list: NullablePointer[XmlNode] tag, inLine: I32): String =>
     var pcstring: Pointer[U8] =  @xmlNodeListGetRawString(doc, list, inLine)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -8179,6 +8226,7 @@ primitive LibXML2
   fun xmlNodeListGetString(doc: NullablePointer[XmlDoc] tag, list: NullablePointer[XmlNode] tag, inLine: I32): String =>
     var pcstring: Pointer[U8] =  @xmlNodeListGetString(doc, list, inLine)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -8292,6 +8340,7 @@ primitive LibXML2
   fun xmlNormalizeWindowsPath(path: String): String =>
     var pcstring: Pointer[U8] =  @xmlNormalizeWindowsPath(path.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -8416,7 +8465,7 @@ primitive LibXML2
   Arguments:
     [PointerType size=64]->[Struct size=448,fid: f15]
 */
-  fun xmlOutputBufferGetContent(out: NullablePointer[XmlOutputBuffer] tag): String =>
+  fun xmlOutputBufferGetContent(out: NullablePointer[XmlOutputBuffer] tag): String val =>
     var pcstring: Pointer[U8] =  @xmlOutputBufferGetContent(out)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -8491,6 +8540,7 @@ primitive LibXML2
   fun xmlParseAttValue(ctxt: NullablePointer[XmlParserCtxt] tag): String =>
     var pcstring: Pointer[U8] =  @xmlParseAttValue(ctxt)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -8816,6 +8866,7 @@ primitive LibXML2
   fun xmlParseEncName(ctxt: NullablePointer[XmlParserCtxt] tag): String =>
     var pcstring: Pointer[U8] =  @xmlParseEncName(ctxt)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -8828,7 +8879,7 @@ primitive LibXML2
   Arguments:
     [PointerType size=64]->[Struct size=6016,fid: f17]
 */
-  fun xmlParseEncodingDecl(ctxt: NullablePointer[XmlParserCtxt] tag): String =>
+  fun xmlParseEncodingDecl(ctxt: NullablePointer[XmlParserCtxt] tag): String val =>
     var pcstring: Pointer[U8] =  @xmlParseEncodingDecl(ctxt)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -9039,7 +9090,7 @@ primitive LibXML2
   Arguments:
     [PointerType size=64]->[Struct size=6016,fid: f17]
 */
-  fun xmlParseName(ctxt: NullablePointer[XmlParserCtxt] tag): String =>
+  fun xmlParseName(ctxt: NullablePointer[XmlParserCtxt] tag): String val =>
     var pcstring: Pointer[U8] =  @xmlParseName(ctxt)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -9070,6 +9121,7 @@ primitive LibXML2
   fun xmlParseNmtoken(ctxt: NullablePointer[XmlParserCtxt] tag): String =>
     var pcstring: Pointer[U8] =  @xmlParseNmtoken(ctxt)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -9134,7 +9186,7 @@ primitive LibXML2
   Arguments:
     [PointerType size=64]->[Struct size=6016,fid: f17]
 */
-  fun xmlParsePITarget(ctxt: NullablePointer[XmlParserCtxt] tag): String =>
+  fun xmlParsePITarget(ctxt: NullablePointer[XmlParserCtxt] tag): String val =>
     var pcstring: Pointer[U8] =  @xmlParsePITarget(ctxt)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -9152,6 +9204,7 @@ primitive LibXML2
   fun xmlParsePubidLiteral(ctxt: NullablePointer[XmlParserCtxt] tag): String =>
     var pcstring: Pointer[U8] =  @xmlParsePubidLiteral(ctxt)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -9167,6 +9220,7 @@ primitive LibXML2
   fun xmlParseQuotedString(ctxt: NullablePointer[XmlParserCtxt] tag): String =>
     var pcstring: Pointer[U8] =  @xmlParseQuotedString(ctxt)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -9205,7 +9259,7 @@ primitive LibXML2
   Arguments:
     [PointerType size=64]->[Struct size=6016,fid: f17]
 */
-  fun xmlParseStartTag(ctxt: NullablePointer[XmlParserCtxt] tag): String =>
+  fun xmlParseStartTag(ctxt: NullablePointer[XmlParserCtxt] tag): String val =>
     var pcstring: Pointer[U8] =  @xmlParseStartTag(ctxt)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -9223,6 +9277,7 @@ primitive LibXML2
   fun xmlParseSystemLiteral(ctxt: NullablePointer[XmlParserCtxt] tag): String =>
     var pcstring: Pointer[U8] =  @xmlParseSystemLiteral(ctxt)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -9292,6 +9347,7 @@ primitive LibXML2
   fun xmlParseVersionInfo(ctxt: NullablePointer[XmlParserCtxt] tag): String =>
     var pcstring: Pointer[U8] =  @xmlParseVersionInfo(ctxt)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -9307,6 +9363,7 @@ primitive LibXML2
   fun xmlParseVersionNum(ctxt: NullablePointer[XmlParserCtxt] tag): String =>
     var pcstring: Pointer[U8] =  @xmlParseVersionNum(ctxt)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -9391,6 +9448,7 @@ primitive LibXML2
   fun xmlParserGetDirectory(filename: String): String =>
     var pcstring: Pointer[U8] =  @xmlParserGetDirectory(filename.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -9685,6 +9743,7 @@ primitive LibXML2
   fun xmlPathToURI(path: String): String =>
     var pcstring: Pointer[U8] =  @xmlPathToURI(path.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -11090,7 +11149,7 @@ primitive LibXML2
   Arguments:
     [PointerType size=64]->[FundamentalType(void) size=0]
 */
-  fun xmlSAX2GetPublicId(ctx: Pointer[None] tag): String =>
+  fun xmlSAX2GetPublicId(ctx: Pointer[None] tag): String val =>
     var pcstring: Pointer[U8] =  @xmlSAX2GetPublicId(ctx)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -11105,7 +11164,7 @@ primitive LibXML2
   Arguments:
     [PointerType size=64]->[FundamentalType(void) size=0]
 */
-  fun xmlSAX2GetSystemId(ctx: Pointer[None] tag): String =>
+  fun xmlSAX2GetSystemId(ctx: Pointer[None] tag): String val =>
     var pcstring: Pointer[U8] =  @xmlSAX2GetSystemId(ctx)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -11738,6 +11797,7 @@ primitive LibXML2
   fun xmlSaveUri(uri: NullablePointer[XmlURI] tag): String =>
     var pcstring: Pointer[U8] =  @xmlSaveUri(uri)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -11753,6 +11813,7 @@ primitive LibXML2
   fun xmlScanName(ctxt: NullablePointer[XmlParserCtxt] tag): String =>
     var pcstring: Pointer[U8] =  @xmlScanName(ctxt)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -11796,6 +11857,7 @@ primitive LibXML2
   fun xmlSchemaCollapseString(value: String): String =>
     var pcstring: Pointer[U8] =  @xmlSchemaCollapseString(value.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -12591,7 +12653,7 @@ primitive LibXML2
   Arguments:
     [PointerType size=64]->[Struct size=,fid: f77]
 */
-  fun xmlSchemaValueGetAsString(xmlval: NullablePointer[XmlSchemaVal] tag): String =>
+  fun xmlSchemaValueGetAsString(xmlval: NullablePointer[XmlSchemaVal] tag): String val =>
     var pcstring: Pointer[U8] =  @xmlSchemaValueGetAsString(xmlval)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -12622,6 +12684,7 @@ primitive LibXML2
   fun xmlSchemaWhiteSpaceReplace(value: String): String =>
     var pcstring: Pointer[U8] =  @xmlSchemaWhiteSpaceReplace(value.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -13242,7 +13305,7 @@ primitive LibXML2
     [PointerType size=64]->[FundamentalType(unsigned char) size=8]
     [PointerType size=64]->[FundamentalType(int) size=32]
 */
-  fun xmlSplitQName3(name: String, len: Pointer[I32] tag): String =>
+  fun xmlSplitQName3(name: String, len: Pointer[I32] tag): String val =>
     var pcstring: Pointer[U8] =  @xmlSplitQName3(name.cstring(), len)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -13344,7 +13407,7 @@ primitive LibXML2
     [PointerType size=64]->[FundamentalType(unsigned char) size=8]
     [PointerType size=64]->[FundamentalType(unsigned char) size=8]
 */
-  fun xmlStrcasestr(str: String, xmlval: String): String =>
+  fun xmlStrcasestr(str: String, xmlval: String): String val =>
     var pcstring: Pointer[U8] =  @xmlStrcasestr(str.cstring(), xmlval.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -13363,6 +13426,7 @@ primitive LibXML2
   fun xmlStrcat(cur: String, add: String): String =>
     var pcstring: Pointer[U8] =  @xmlStrcat(cur.cstring(), add.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -13376,7 +13440,7 @@ primitive LibXML2
     [PointerType size=64]->[FundamentalType(unsigned char) size=8]
     [FundamentalType(unsigned char) size=8]
 */
-  fun xmlStrchr(str: String, xmlval: U8): String =>
+  fun xmlStrchr(str: String, xmlval: U8): String val =>
     var pcstring: Pointer[U8] =  @xmlStrchr(str.cstring(), xmlval)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -13408,6 +13472,7 @@ primitive LibXML2
   fun xmlStrdup(cur: String): String =>
     var pcstring: Pointer[U8] =  @xmlStrdup(cur.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -13515,6 +13580,7 @@ primitive LibXML2
   fun xmlStringDecodeEntities(ctxt: NullablePointer[XmlParserCtxt] tag, str: String, what: I32, xmlend: U8, end2: U8, end3: U8): String =>
     var pcstring: Pointer[U8] =  @xmlStringDecodeEntities(ctxt, str.cstring(), what, xmlend, end2, end3)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -13550,6 +13616,7 @@ primitive LibXML2
   fun xmlStringLenDecodeEntities(ctxt: NullablePointer[XmlParserCtxt] tag, str: String, len: I32, what: I32, xmlend: U8, end2: U8, end3: U8): String =>
     var pcstring: Pointer[U8] =  @xmlStringLenDecodeEntities(ctxt, str.cstring(), len, what, xmlend, end2, end3)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -13610,6 +13677,7 @@ primitive LibXML2
   fun xmlStrncat(cur: String, add: String, len: I32): String =>
     var pcstring: Pointer[U8] =  @xmlStrncat(cur.cstring(), add.cstring(), len)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -13627,6 +13695,7 @@ primitive LibXML2
   fun xmlStrncatNew(str1: String, str2: String, len: I32): String =>
     var pcstring: Pointer[U8] =  @xmlStrncatNew(str1.cstring(), str2.cstring(), len)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -13658,6 +13727,7 @@ primitive LibXML2
   fun xmlStrndup(cur: String, len: I32): String =>
     var pcstring: Pointer[U8] =  @xmlStrndup(cur.cstring(), len)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -13671,7 +13741,7 @@ primitive LibXML2
     [PointerType size=64]->[FundamentalType(unsigned char) size=8]
     [PointerType size=64]->[FundamentalType(unsigned char) size=8]
 */
-  fun xmlStrstr(str: String, xmlval: String): String =>
+  fun xmlStrstr(str: String, xmlval: String): String val =>
     var pcstring: Pointer[U8] =  @xmlStrstr(str.cstring(), xmlval.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -13691,6 +13761,7 @@ primitive LibXML2
   fun xmlStrsub(str: String, start: I32, len: I32): String =>
     var pcstring: Pointer[U8] =  @xmlStrsub(str.cstring(), start, len)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -13804,6 +13875,7 @@ primitive LibXML2
   fun xmlTextReaderBaseUri(reader: NullablePointer[XmlTextReader] tag): String =>
     var pcstring: Pointer[U8] =  @xmlTextReaderBaseUri(reader)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -13842,7 +13914,7 @@ primitive LibXML2
   Arguments:
     [PointerType size=64]->[Struct size=,fid: f83]
 */
-  fun xmlTextReaderConstBaseUri(reader: NullablePointer[XmlTextReader] tag): String =>
+  fun xmlTextReaderConstBaseUri(reader: NullablePointer[XmlTextReader] tag): String val =>
     var pcstring: Pointer[U8] =  @xmlTextReaderConstBaseUri(reader)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -13857,7 +13929,7 @@ primitive LibXML2
   Arguments:
     [PointerType size=64]->[Struct size=,fid: f83]
 */
-  fun xmlTextReaderConstEncoding(reader: NullablePointer[XmlTextReader] tag): String =>
+  fun xmlTextReaderConstEncoding(reader: NullablePointer[XmlTextReader] tag): String val =>
     var pcstring: Pointer[U8] =  @xmlTextReaderConstEncoding(reader)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -13872,7 +13944,7 @@ primitive LibXML2
   Arguments:
     [PointerType size=64]->[Struct size=,fid: f83]
 */
-  fun xmlTextReaderConstLocalName(reader: NullablePointer[XmlTextReader] tag): String =>
+  fun xmlTextReaderConstLocalName(reader: NullablePointer[XmlTextReader] tag): String val =>
     var pcstring: Pointer[U8] =  @xmlTextReaderConstLocalName(reader)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -13887,7 +13959,7 @@ primitive LibXML2
   Arguments:
     [PointerType size=64]->[Struct size=,fid: f83]
 */
-  fun xmlTextReaderConstName(reader: NullablePointer[XmlTextReader] tag): String =>
+  fun xmlTextReaderConstName(reader: NullablePointer[XmlTextReader] tag): String val =>
     var pcstring: Pointer[U8] =  @xmlTextReaderConstName(reader)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -13902,7 +13974,7 @@ primitive LibXML2
   Arguments:
     [PointerType size=64]->[Struct size=,fid: f83]
 */
-  fun xmlTextReaderConstNamespaceUri(reader: NullablePointer[XmlTextReader] tag): String =>
+  fun xmlTextReaderConstNamespaceUri(reader: NullablePointer[XmlTextReader] tag): String val =>
     var pcstring: Pointer[U8] =  @xmlTextReaderConstNamespaceUri(reader)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -13917,7 +13989,7 @@ primitive LibXML2
   Arguments:
     [PointerType size=64]->[Struct size=,fid: f83]
 */
-  fun xmlTextReaderConstPrefix(reader: NullablePointer[XmlTextReader] tag): String =>
+  fun xmlTextReaderConstPrefix(reader: NullablePointer[XmlTextReader] tag): String val =>
     var pcstring: Pointer[U8] =  @xmlTextReaderConstPrefix(reader)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -13933,7 +14005,7 @@ primitive LibXML2
     [PointerType size=64]->[Struct size=,fid: f83]
     [PointerType size=64]->[FundamentalType(unsigned char) size=8]
 */
-  fun xmlTextReaderConstString(reader: NullablePointer[XmlTextReader] tag, str: String): String =>
+  fun xmlTextReaderConstString(reader: NullablePointer[XmlTextReader] tag, str: String): String val =>
     var pcstring: Pointer[U8] =  @xmlTextReaderConstString(reader, str.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -13948,7 +14020,7 @@ primitive LibXML2
   Arguments:
     [PointerType size=64]->[Struct size=,fid: f83]
 */
-  fun xmlTextReaderConstValue(reader: NullablePointer[XmlTextReader] tag): String =>
+  fun xmlTextReaderConstValue(reader: NullablePointer[XmlTextReader] tag): String val =>
     var pcstring: Pointer[U8] =  @xmlTextReaderConstValue(reader)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -13963,7 +14035,7 @@ primitive LibXML2
   Arguments:
     [PointerType size=64]->[Struct size=,fid: f83]
 */
-  fun xmlTextReaderConstXmlLang(reader: NullablePointer[XmlTextReader] tag): String =>
+  fun xmlTextReaderConstXmlLang(reader: NullablePointer[XmlTextReader] tag): String val =>
     var pcstring: Pointer[U8] =  @xmlTextReaderConstXmlLang(reader)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -13978,7 +14050,7 @@ primitive LibXML2
   Arguments:
     [PointerType size=64]->[Struct size=,fid: f83]
 */
-  fun xmlTextReaderConstXmlVersion(reader: NullablePointer[XmlTextReader] tag): String =>
+  fun xmlTextReaderConstXmlVersion(reader: NullablePointer[XmlTextReader] tag): String val =>
     var pcstring: Pointer[U8] =  @xmlTextReaderConstXmlVersion(reader)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -14049,6 +14121,7 @@ primitive LibXML2
   fun xmlTextReaderGetAttribute(reader: NullablePointer[XmlTextReader] tag, name: String): String =>
     var pcstring: Pointer[U8] =  @xmlTextReaderGetAttribute(reader, name.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -14065,6 +14138,7 @@ primitive LibXML2
   fun xmlTextReaderGetAttributeNo(reader: NullablePointer[XmlTextReader] tag, no: I32): String =>
     var pcstring: Pointer[U8] =  @xmlTextReaderGetAttributeNo(reader, no)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -14082,6 +14156,7 @@ primitive LibXML2
   fun xmlTextReaderGetAttributeNs(reader: NullablePointer[XmlTextReader] tag, localName: String, namespaceURI: String): String =>
     var pcstring: Pointer[U8] =  @xmlTextReaderGetAttributeNs(reader, localName.cstring(), namespaceURI.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -14243,6 +14318,7 @@ primitive LibXML2
   fun xmlTextReaderLocalName(reader: NullablePointer[XmlTextReader] tag): String =>
     var pcstring: Pointer[U8] =  @xmlTextReaderLocalName(reader)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -14258,6 +14334,7 @@ primitive LibXML2
   fun xmlTextReaderLocatorBaseURI(locator: Pointer[None] tag): String =>
     var pcstring: Pointer[U8] =  @xmlTextReaderLocatorBaseURI(locator)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -14287,6 +14364,7 @@ primitive LibXML2
   fun xmlTextReaderLookupNamespace(reader: NullablePointer[XmlTextReader] tag, prefix: String): String =>
     var pcstring: Pointer[U8] =  @xmlTextReaderLookupNamespace(reader, prefix.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -14384,6 +14462,7 @@ primitive LibXML2
   fun xmlTextReaderName(reader: NullablePointer[XmlTextReader] tag): String =>
     var pcstring: Pointer[U8] =  @xmlTextReaderName(reader)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -14399,6 +14478,7 @@ primitive LibXML2
   fun xmlTextReaderNamespaceUri(reader: NullablePointer[XmlTextReader] tag): String =>
     var pcstring: Pointer[U8] =  @xmlTextReaderNamespaceUri(reader)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -14466,6 +14546,7 @@ primitive LibXML2
   fun xmlTextReaderPrefix(reader: NullablePointer[XmlTextReader] tag): String =>
     var pcstring: Pointer[U8] =  @xmlTextReaderPrefix(reader)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -14533,6 +14614,7 @@ primitive LibXML2
   fun xmlTextReaderReadInnerXml(reader: NullablePointer[XmlTextReader] tag): String =>
     var pcstring: Pointer[U8] =  @xmlTextReaderReadInnerXml(reader)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -14548,6 +14630,7 @@ primitive LibXML2
   fun xmlTextReaderReadOuterXml(reader: NullablePointer[XmlTextReader] tag): String =>
     var pcstring: Pointer[U8] =  @xmlTextReaderReadOuterXml(reader)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -14576,6 +14659,7 @@ primitive LibXML2
   fun xmlTextReaderReadString(reader: NullablePointer[XmlTextReader] tag): String =>
     var pcstring: Pointer[U8] =  @xmlTextReaderReadString(reader)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -14752,6 +14836,7 @@ primitive LibXML2
   fun xmlTextReaderValue(reader: NullablePointer[XmlTextReader] tag): String =>
     var pcstring: Pointer[U8] =  @xmlTextReaderValue(reader)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -14767,6 +14852,7 @@ primitive LibXML2
   fun xmlTextReaderXmlLang(reader: NullablePointer[XmlTextReader] tag): String =>
     var pcstring: Pointer[U8] =  @xmlTextReaderXmlLang(reader)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -15900,7 +15986,7 @@ primitive LibXML2
   Arguments:
     [PointerType size=64]->[FundamentalType(char) size=8]
 */
-  fun xmlThrDefTreeIndentString(v: String): String =>
+  fun xmlThrDefTreeIndentString(v: String): String val =>
     var pcstring: Pointer[U8] =  @xmlThrDefTreeIndentString(v.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -18078,6 +18164,7 @@ primitive LibXML2
   fun xmlURIEscape(str: String): String =>
     var pcstring: Pointer[U8] =  @xmlURIEscape(str.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -18094,6 +18181,7 @@ primitive LibXML2
   fun xmlURIEscapeStr(str: String, list: String): String =>
     var pcstring: Pointer[U8] =  @xmlURIEscapeStr(str.cstring(), list.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -18111,6 +18199,7 @@ primitive LibXML2
   fun xmlURIUnescapeString(str: String, len: I32, target: String): String =>
     var pcstring: Pointer[U8] =  @xmlURIUnescapeString(str.cstring(), len, target.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -18181,6 +18270,7 @@ primitive LibXML2
   fun xmlUTF8Strndup(utf: String, len: I32): String =>
     var pcstring: Pointer[U8] =  @xmlUTF8Strndup(utf.cstring(), len)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -18194,7 +18284,7 @@ primitive LibXML2
     [PointerType size=64]->[FundamentalType(unsigned char) size=8]
     [FundamentalType(int) size=32]
 */
-  fun xmlUTF8Strpos(utf: String, pos: I32): String =>
+  fun xmlUTF8Strpos(utf: String, pos: I32): String val =>
     var pcstring: Pointer[U8] =  @xmlUTF8Strpos(utf.cstring(), pos)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -18228,6 +18318,7 @@ primitive LibXML2
   fun xmlUTF8Strsub(utf: String, start: I32, len: I32): String =>
     var pcstring: Pointer[U8] =  @xmlUTF8Strsub(utf.cstring(), start, len)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -18315,6 +18406,7 @@ primitive LibXML2
   fun xmlValidCtxtNormalizeAttributeValue(ctxt: NullablePointer[XmlValidCtxt] tag, doc: NullablePointer[XmlDoc] tag, elem: NullablePointer[XmlNode] tag, name: String, value: String): String =>
     var pcstring: Pointer[U8] =  @xmlValidCtxtNormalizeAttributeValue(ctxt, doc, elem, name.cstring(), value.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -18333,6 +18425,7 @@ primitive LibXML2
   fun xmlValidNormalizeAttributeValue(doc: NullablePointer[XmlDoc] tag, elem: NullablePointer[XmlNode] tag, name: String, value: String): String =>
     var pcstring: Pointer[U8] =  @xmlValidNormalizeAttributeValue(doc, elem, name.cstring(), value.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -18891,6 +18984,7 @@ primitive LibXML2
   fun xmlXPathCastBooleanToString(xmlval: I32): String =>
     var pcstring: Pointer[U8] =  @xmlXPathCastBooleanToString(xmlval)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -18932,6 +19026,7 @@ primitive LibXML2
   fun xmlXPathCastNodeSetToString(ns: NullablePointer[XmlNodeSet] tag): String =>
     var pcstring: Pointer[U8] =  @xmlXPathCastNodeSetToString(ns)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -18960,6 +19055,7 @@ primitive LibXML2
   fun xmlXPathCastNodeToString(node: NullablePointer[XmlNode] tag): String =>
     var pcstring: Pointer[U8] =  @xmlXPathCastNodeToString(node)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -18988,6 +19084,7 @@ primitive LibXML2
   fun xmlXPathCastNumberToString(xmlval: F64): String =>
     var pcstring: Pointer[U8] =  @xmlXPathCastNumberToString(xmlval)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -19055,6 +19152,7 @@ primitive LibXML2
   fun xmlXPathCastToString(xmlval: NullablePointer[XmlXPathObject] tag): String =>
     var pcstring: Pointer[U8] =  @xmlXPathCastToString(xmlval)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -20330,7 +20428,7 @@ primitive LibXML2
     [PointerType size=64]->[Struct size=3008,fid: f65]
     [PointerType size=64]->[FundamentalType(unsigned char) size=8]
 */
-  fun xmlXPathNsLookup(ctxt: NullablePointer[XmlXPathContext] tag, prefix: String): String =>
+  fun xmlXPathNsLookup(ctxt: NullablePointer[XmlXPathContext] tag, prefix: String): String val =>
     var pcstring: Pointer[U8] =  @xmlXPathNsLookup(ctxt, prefix.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p
@@ -20388,6 +20486,7 @@ primitive LibXML2
   fun xmlXPathParseNCName(ctxt: NullablePointer[XmlXPathParserContext] tag): String =>
     var pcstring: Pointer[U8] =  @xmlXPathParseNCName(ctxt)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -20403,6 +20502,7 @@ primitive LibXML2
   fun xmlXPathParseName(ctxt: NullablePointer[XmlXPathParserContext] tag): String =>
     var pcstring: Pointer[U8] =  @xmlXPathParseName(ctxt)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 
@@ -20470,6 +20570,7 @@ primitive LibXML2
   fun xmlXPathPopString(ctxt: NullablePointer[XmlXPathParserContext] tag): String =>
     var pcstring: Pointer[U8] =  @xmlXPathPopString(ctxt)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
 
 

@@ -1370,3 +1370,74 @@ class \nodoc\ iso TestParseDocEntitiesNotSubstitutedByDefault is UnitTest
     else
       h.fail("substitute_entities parse should have succeeded")
     end
+
+class \nodoc\ iso TestRepeatedCstringAccessors is UnitTest
+  """
+  Regression test for the libxml2 xmlChar*-returning accessors that
+  used to leak their C-side allocation on every call.
+
+  Each accessor (`getProp`, `getNsProp`, `getNodePath`, `getContent`,
+  `getLang`, `xpathCastNodeToString`) is invoked in a tight loop with
+  results captured up-front so the strings persist across subsequent
+  calls. If the wrapper accidentally freed a borrowed pointer (e.g.
+  the const-pointer return from `xmlBufferContent`), or if it
+  double-freed, the loop would crash with `free(): invalid pointer`
+  or `double free or corruption`. If the captured strings shared
+  backing memory with the freed allocation, the post-loop assertions
+  would surface garbage.
+
+  The leak itself is invisible to Pony assertions and only detectable
+  under external memory instrumentation; this test guards against
+  future regressions where the generator template starts emitting
+  the free call for functions that return borrowed pointers.
+  """
+  fun name(): String => "xml2node/repeated-cstring-accessors"
+
+  fun apply(h: TestHelper) =>
+    let xml =
+      "<root xml:lang=\"en\" xmlns:c=\"http://example.com/c\">"
+      + "<item id=\"x\" c:type=\"gint\">hello</item>"
+      + "</root>"
+    match Xml2Parser.parseDoc(xml)
+    | let doc: Xml2Doc =>
+      try
+        let root = doc.getRootElement()?
+        let item = root.getChildren()(0)?
+
+        let initial_path: String = item.getNodePath()
+        let initial_content: String = item.getContent()
+        let initial_id: String = item.getProp("id")
+        let initial_lang: String = item.getLang()
+        let initial_cast: String = item.xpathCastNodeToString()
+        let initial_nstype: String =
+          item.getPropNs("http://example.com/c", "type")
+        // nodeDump also exercises xmlBufferContent (which must NOT
+        // be freed by the generator-emitted wrapper).
+        let initial_dump: String = item.nodeDump(0, 0)
+
+        var i: USize = 0
+        while i < 500 do
+          h.assert_eq[String]("/root/item", item.getNodePath())
+          h.assert_eq[String]("hello", item.getContent())
+          h.assert_eq[String]("x", item.getProp("id"))
+          h.assert_eq[String]("en", item.getLang())
+          h.assert_eq[String]("hello", item.xpathCastNodeToString())
+          h.assert_eq[String](
+            "gint", item.getPropNs("http://example.com/c", "type"))
+          let _ = item.nodeDump(0, 0)
+          i = i + 1
+        end
+
+        h.assert_eq[String]("/root/item", initial_path)
+        h.assert_eq[String]("hello", initial_content)
+        h.assert_eq[String]("x", initial_id)
+        h.assert_eq[String]("en", initial_lang)
+        h.assert_eq[String]("hello", initial_cast)
+        h.assert_eq[String]("gint", initial_nstype)
+        h.assert_true(initial_dump.size() > 0)
+      else
+        h.fail("Failed to access nodes")
+      end
+    | let err: Xml2Error =>
+      h.fail("parse failed: " + err.string())
+    end

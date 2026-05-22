@@ -18,4 +18,5 @@
   fun xmlStringLenDecodeEntities(ctxt: NullablePointer[XmlParserCtxt] tag, str: String, len: I32, what: I32, xmlend: U8, end2: U8, end3: U8): String =>
     var pcstring: Pointer[U8] =  @xmlStringLenDecodeEntities(ctxt, str.cstring(), len, what, xmlend, end2, end3)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p

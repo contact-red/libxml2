@@ -13,4 +13,5 @@
   fun xmlURIEscapeStr(str: String, list: String): String =>
     var pcstring: Pointer[U8] =  @xmlURIEscapeStr(str.cstring(), list.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p

@@ -12,4 +12,5 @@
   fun xmlTextReaderValue(reader: NullablePointer[XmlTextReader] tag): String =>
     var pcstring: Pointer[U8] =  @xmlTextReaderValue(reader)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p

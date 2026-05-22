@@ -10,7 +10,7 @@
     [PointerType size=64]->[FundamentalType(unsigned char) size=8]
     [PointerType size=64]->[FundamentalType(int) size=32]
 */
-  fun xmlSplitQName3(name: String, len: Pointer[I32] tag): String =>
+  fun xmlSplitQName3(name: String, len: Pointer[I32] tag): String val =>
     var pcstring: Pointer[U8] =  @xmlSplitQName3(name.cstring(), len)
     let p: String iso = String.from_cstring(pcstring).clone()
     consume p

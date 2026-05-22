@@ -12,4 +12,5 @@
   fun xmlCatalogResolvePublic(pubID: String): String =>
     var pcstring: Pointer[U8] =  @xmlCatalogResolvePublic(pubID.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p

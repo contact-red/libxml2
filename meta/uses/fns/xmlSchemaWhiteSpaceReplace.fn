@@ -12,4 +12,5 @@
   fun xmlSchemaWhiteSpaceReplace(value: String): String =>
     var pcstring: Pointer[U8] =  @xmlSchemaWhiteSpaceReplace(value.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p

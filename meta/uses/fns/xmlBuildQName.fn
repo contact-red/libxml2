@@ -15,4 +15,5 @@
   fun xmlBuildQName(ncname: String, prefix: String, memory: String, len: I32): String =>
     var pcstring: Pointer[U8] =  @xmlBuildQName(ncname.cstring(), prefix.cstring(), memory.cstring(), len)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p

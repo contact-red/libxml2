@@ -13,4 +13,5 @@
   fun xmlCharStrndup(cur: String, len: I32): String =>
     var pcstring: Pointer[U8] =  @xmlCharStrndup(cur.cstring(), len)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p

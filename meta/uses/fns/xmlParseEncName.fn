@@ -12,4 +12,5 @@
   fun xmlParseEncName(ctxt: NullablePointer[XmlParserCtxt] tag): String =>
     var pcstring: Pointer[U8] =  @xmlParseEncName(ctxt)
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p

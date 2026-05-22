@@ -13,4 +13,5 @@
   fun xmlEncodeEntitiesReentrant(doc: NullablePointer[XmlDoc] tag, input: String): String =>
     var pcstring: Pointer[U8] =  @xmlEncodeEntitiesReentrant(doc, input.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p

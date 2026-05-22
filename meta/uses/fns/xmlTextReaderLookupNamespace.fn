@@ -13,4 +13,5 @@
   fun xmlTextReaderLookupNamespace(reader: NullablePointer[XmlTextReader] tag, prefix: String): String =>
     var pcstring: Pointer[U8] =  @xmlTextReaderLookupNamespace(reader, prefix.cstring())
     let p: String iso = String.from_cstring(pcstring).clone()
+    Xml2Free(pcstring)
     consume p
