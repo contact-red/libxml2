@@ -78,6 +78,23 @@ actor \nodoc\ Main is TestList
     test(TestParseDocNoBlanks)
     test(TestParseDocErrorRecovery)
     test(TestParseDocEntitiesNotSubstitutedByDefault)
+    // Extensive API coverage
+    test(TestSetRootElementReplacesOldRoot)
+    test(TestCreateDocWithCustomVersion)
+    test(TestSetPropOverwritesExisting)
+    test(TestEmptyAttributeValue)
+    test(TestUnicodeContentRoundTrip)
+    test(TestUnicodeAttributeValues)
+    test(TestSerializeUTF16Encoding)
+    test(TestParserOptionsCombined)
+    test(TestXPathStringFunctionsExtensive)
+    test(TestXPathPositionAndLast)
+    test(TestXPathNameFunctions)
+    test(TestManyAttributesRoundTrip)
+    test(Property1UnitTest[(String, String)](
+      recover iso PropSetGetPropRoundTrip end))
+    test(Property1UnitTest[USize](
+      recover iso PropAppendChildPreservesCount end))
     // Crash-resistance fuzz tests (PonyCheck Property1)
     test(Property1UnitTest[String](recover iso FuzzParseDoc end))
     test(Property1UnitTest[(String, String)](
