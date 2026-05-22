@@ -29,10 +29,15 @@ class \nodoc\ iso TestNodeUtilityMethods is UnitTest
       // The string cast includes all text content from the node tree
       h.assert_eq[String]("\n  hello\n  world\n", cast_str)
 
-      // Test getLineNo on root (returns 0 unless globally enabled)
+      // Test getLineNo on root. libxml2 returns -1 when line
+      // tracking is unavailable, otherwise a non-negative line
+      // number. Either is acceptable; what matters is the return
+      // value is in the documented range.
       let line_no = root.getLineNo()
-      // Just verify the method runs and returns a value
-      h.assert_true(true) // Method executed without error
+      h.assert_true(
+        line_no >= I64(-1),
+        "getLineNo should return -1 (unavailable) or >= 0; got "
+          + line_no.string())
 
       // Test these methods on child nodes
       let children = root.getChildren()
