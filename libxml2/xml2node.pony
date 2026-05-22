@@ -48,20 +48,25 @@ class Xml2Node
     let tmpctx: NullablePointer[XmlXPathContext] =
       LibXML2.xmlXPathNewContext(ptr.doc)
     if tmpctx.is_none() then
-      // Context allocation failed (OOM). Passing a null context to the
-      // calls below would deref null inside libxml2.
-      return None
+      return Xml2Error._synthetic(
+        Xml2ErrorDomainXPath,
+        Xml2ErrorLevelFatal,
+        I32(-1),
+        "xmlXPathNewContext returned null (OOM)")
     end
     for (n, url) in namespaces.values() do
       LibXML2.xmlXPathRegisterNs(tmpctx, n, url)
     end
     if LibXML2.xmlXPathSetContextNode(ptr', tmpctx) < 0 then
-      // Failure to set the context node would silently fall back to the
-      // document root, so a query like "./child" would return matches
-      // from the whole document instead of from this node. Free the
-      // context and return None rather than producing wrong results.
+      // Failure to set the context node would silently fall back to
+      // the document root, so a query like "./child" would return
+      // matches from the whole document instead of from this node.
       LibXML2.xmlXPathFreeContext(tmpctx)
-      return None
+      return Xml2Error._synthetic(
+        Xml2ErrorDomainXPath,
+        Xml2ErrorLevelError,
+        I32(-3),
+        "xmlXPathSetContextNode returned negative")
     end
     let xptr: NullablePointer[XmlXPathObject] =
       LibXML2.xmlXPathEval(xpath, tmpctx)
@@ -72,43 +77,51 @@ class Xml2Node
   fun xpathEvalNodes(
     xpath: String val,
     namespaces: Array[(String val, String val)] = [])
-    : Array[Xml2Node] ?
+    : (Array[Xml2Node] | Xml2Error)
   =>
     """
-    A convenience method that calls xpathEval and returns an Array[Xml2Node].
+    Convenience method that calls `xpathEval` and projects the result
+    to a nodeset. Returns the matched nodes (possibly an empty array
+    if no matches) or an `Xml2Error` describing the failure.
     """
-    (xpathEval(xpath, namespaces) as Array[Xml2Node])
+    _XPathExpect.nodes(xpathEval(xpath, namespaces))
 
   fun xpathEvalString(
     xpath: String val,
     namespaces: Array[(String val, String val)] = [])
-    : String val ?
+    : (String val | Xml2Error)
   =>
     """
-    A convenience method that calls xpathEval and returns a String val.
+    Convenience method that calls `xpathEval` and projects the result
+    to a string. Returns an `Xml2Error` if the evaluation failed or
+    yielded a non-string value.
     """
-    (xpathEval(xpath, namespaces) as String val)
+    _XPathExpect.string(xpathEval(xpath, namespaces))
 
   fun xpathEvalF64(
     xpath: String val,
     namespaces: Array[(String val, String val)] = [])
-    : F64 ?
+    : (F64 | Xml2Error)
   =>
     """
-    A convenience method that calls xpathEval and returns an F64 (XML's
-    default Number type in libxml2).
+    Convenience method that calls `xpathEval` and projects the result
+    to an `F64` (libxml2's number representation). Returns an
+    `Xml2Error` if the evaluation failed or yielded a non-numeric
+    value.
     """
-    (xpathEval(xpath, namespaces) as F64)
+    _XPathExpect.f64(xpathEval(xpath, namespaces))
 
   fun xpathEvalBool(
     xpath: String val,
     namespaces: Array[(String val, String val)] = [])
-    : Bool ?
+    : (Bool | Xml2Error)
   =>
     """
-    A convenience method that calls xpathEval and returns a Bool.
+    Convenience method that calls `xpathEval` and projects the result
+    to a `Bool`. Returns an `Xml2Error` if the evaluation failed or
+    yielded a non-boolean value.
     """
-    (xpathEval(xpath, namespaces) as Bool)
+    _XPathExpect.bool(xpathEval(xpath, namespaces))
 
   fun ref name(): String val =>
     """

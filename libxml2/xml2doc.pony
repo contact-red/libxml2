@@ -29,53 +29,15 @@ class Xml2Doc
   """
   let ptr': NullablePointer[XmlDoc]
 
-  new parseFile(
-    auth: FileAuth,
-    pfilename: String val,
-    options: Xml2ParserOptions val = Xml2ParserOptions.create()) ?
-  =>
+  new _from_ptr(p: NullablePointer[XmlDoc]) =>
     """
-    Parse an XML document from the given file path using libxml2.
-
-    - `auth`: Capability proving the caller has permission to read files.
-    - `pfilename`: Path to the XML file to parse.
-    - `options`: Parser options controlling network access, entity
-      expansion, whitespace handling, and recovery behaviour. Defaults
-      to a safe-by-default `Xml2ParserOptions` (no network access, no
-      entity substitution). See `Xml2ParserOptions` for the full list.
-
-    Routes through libxml2's `xmlReadFile`, which is the
-    options-aware replacement for the legacy `xmlParseFile`. On
-    success, stores the underlying `xmlDoc*` in `ptr'`. Raises an
-    error if parsing fails or returns a null document pointer.
+    Package-private constructor used by `Xml2Parser` to wrap a
+    libxml2-allocated `xmlDoc*` (returned by `xmlReadDoc` /
+    `xmlReadFile`) into an `Xml2Doc` instance. The caller is
+    responsible for null-checking `p` before construction; this
+    constructor accepts the pointer as-is.
     """
-    let ptrx: NullablePointer[XmlDoc] =
-      LibXML2.xmlReadFile(pfilename, "", options.to_flags())
-    if ptrx.is_none() then error end
-    ptr' = ptrx
-
-  new parseDoc(
-    pcur: String val,
-    options: Xml2ParserOptions val = Xml2ParserOptions.create()) ?
-  =>
-    """
-    Parse an XML document from an in-memory string using libxml2.
-
-    - `pcur`: String containing the complete XML document.
-    - `options`: Parser options controlling network access, entity
-      expansion, whitespace handling, and recovery behaviour. Defaults
-      to a safe-by-default `Xml2ParserOptions` (no network access, no
-      entity substitution). See `Xml2ParserOptions` for the full list.
-
-    Routes through libxml2's `xmlReadDoc`, which is the options-aware
-    replacement for the legacy `xmlParseDoc`. On success, stores the
-    underlying `xmlDoc*` in `ptr'`. Raises an error if parsing fails
-    or returns a null document pointer.
-    """
-    let ptrx: NullablePointer[XmlDoc] =
-      LibXML2.xmlReadDoc(pcur, "", "", options.to_flags())
-    if ptrx.is_none() then error end
-    ptr' = ptrx
+    ptr' = p
 
   new create(version: String = "1.0") ? =>
     """
@@ -148,9 +110,12 @@ class Xml2Doc
     let tmpctx: NullablePointer[XmlXPathContext] =
       LibXML2.xmlXPathNewContext(ptr')
     if tmpctx.is_none() then
-      // Context allocation failed (OOM). Passing a null context to
-      // xmlXPathRegisterNs / xmlXPathEval would deref null inside libxml2.
-      return None
+      // Context allocation failed (OOM).
+      return Xml2Error._synthetic(
+        Xml2ErrorDomainXPath,
+        Xml2ErrorLevelFatal,
+        I32(-1),
+        "xmlXPathNewContext returned null (OOM)")
     end
     for (n, url) in namespaces.values() do
       LibXML2.xmlXPathRegisterNs(tmpctx, n, url)
@@ -164,43 +129,55 @@ class Xml2Doc
   fun xpathEvalNodes(
     xpath: String val,
     namespaces: Array[(String val, String val)] = [])
-    : Array[Xml2Node] ?
+    : (Array[Xml2Node] | Xml2Error)
   =>
     """
-    A convenience method that calls xpathEval and returns an Array[Xml2Node].
+    Convenience method that calls `xpathEval` and projects the result
+    to a nodeset.
+
+    Returns the matched nodes (possibly an empty array if the
+    expression yielded no matches), or an `Xml2Error` if either the
+    evaluation itself failed or the expression evaluated to a non-
+    nodeset value (boolean, number, string).
     """
-    (xpathEval(xpath, namespaces) as Array[Xml2Node])
+    _XPathExpect.nodes(xpathEval(xpath, namespaces))
 
   fun xpathEvalString(
     xpath: String val,
     namespaces: Array[(String val, String val)] = [])
-    : String val ?
+    : (String val | Xml2Error)
   =>
     """
-    A convenience method that calls xpathEval and returns a String val.
+    Convenience method that calls `xpathEval` and projects the result
+    to a string. Returns an `Xml2Error` if the evaluation failed or
+    yielded a non-string value.
     """
-    (xpathEval(xpath, namespaces) as String val)
+    _XPathExpect.string(xpathEval(xpath, namespaces))
 
   fun xpathEvalF64(
     xpath: String val,
     namespaces: Array[(String val, String val)] = [])
-    : F64 ?
+    : (F64 | Xml2Error)
   =>
     """
-    A convenience method that calls xpathEval and returns an F64 (XML's
-    default number type in libxml2).
+    Convenience method that calls `xpathEval` and projects the result
+    to an `F64` (libxml2's number representation). Returns an
+    `Xml2Error` if the evaluation failed or yielded a non-numeric
+    value.
     """
-    (xpathEval(xpath, namespaces) as F64)
+    _XPathExpect.f64(xpathEval(xpath, namespaces))
 
   fun xpathEvalBool(
     xpath: String val,
     namespaces: Array[(String val, String val)] = [])
-    : Bool ?
+    : (Bool | Xml2Error)
   =>
     """
-    A convenience method that calls xpathEval and returns a Bool.
+    Convenience method that calls `xpathEval` and projects the result
+    to a `Bool`. Returns an `Xml2Error` if the evaluation failed or
+    yielded a non-boolean value.
     """
-    (xpathEval(xpath, namespaces) as Bool)
+    _XPathExpect.bool(xpathEval(xpath, namespaces))
 
   fun ref getRootElement(): Xml2Node ? =>
     """
@@ -317,7 +294,7 @@ class Xml2Doc
 
     Example:
       ```pony
-      let doc = Xml2Doc.parseDoc("<root><child>text</child></root>")?
+      let doc = Xml2Parser.parseDoc("<root><child>text</child></root>") as Xml2Doc
       let xml_string = doc.serialize()?  // Pretty-printed UTF-8
       let compact = doc.serialize(false)?  // Compact output
       ```
@@ -386,7 +363,7 @@ class Xml2Doc
 
     Example:
       ```pony
-      let doc = Xml2Doc.parseDoc("<root><child>text</child></root>")?
+      let doc = Xml2Parser.parseDoc("<root><child>text</child></root>") as Xml2Doc
       doc.saveToFile(auth, "output.xml")?  // Pretty-printed UTF-8
       doc.saveToFile(auth, "compact.xml", false, "ISO-8859-1")?
       ```

@@ -23,6 +23,9 @@ actor \nodoc\ Main is TestList
     test(TestXPathScalarResults)
     test(TestXPathScalarResultsConvenience)
     test(TestParseError)
+    test(TestXml2ErrorString)
+    test(TestXml2ErrorDomainFromI32)
+    test(TestXml2ErrorLevelFromI32)
     test(TestGetProps)
     test(TestModifyProps)
     // Additional coverage tests

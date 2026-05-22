@@ -14,7 +14,7 @@ class \nodoc\ iso TestModifyProps is UnitTest
       </root>
       """
     try
-      let doc = Xml2Doc.parseDoc(xml)?
+      let doc = Xml2Parser.parseDoc(xml) as Xml2Doc
       let root = doc.getRootElement()?
       h.assert_eq[String](root.nodeDump(0,0),
         """
@@ -59,7 +59,7 @@ class \nodoc\ iso TestGetProps is UnitTest
       </root>
       """
     try
-      let doc = Xml2Doc.parseDoc(xml)?
+      let doc = Xml2Parser.parseDoc(xml) as Xml2Doc
       let root = doc.getRootElement()?
       h.assert_eq[String]("root", root.name())
       var children: Array[Xml2Node] = root.getChildren()
@@ -92,7 +92,7 @@ class \nodoc\ iso TestParseDocAndRoot is UnitTest
       </root>
       """
     try
-      let doc = Xml2Doc.parseDoc(xml)?
+      let doc = Xml2Parser.parseDoc(xml) as Xml2Doc
       let root = doc.getRootElement()?
       h.assert_eq[String]("root", root.name())
       var children: Array[Xml2Node] = root.getChildren()
@@ -114,7 +114,7 @@ class \nodoc\ iso TestDocXPathSimpleNodeset is UnitTest
       </root>
       """
     try
-      let doc = Xml2Doc.parseDoc(xml)?
+      let doc = Xml2Parser.parseDoc(xml) as Xml2Doc
       let res = doc.xpathEval("//child")
       match res
       | let nodes: Array[Xml2Node] =>
@@ -140,8 +140,8 @@ class \nodoc\ iso TestDocXPathSimpleNodesetConvenience is UnitTest
       </root>
       """
     try
-      let doc = Xml2Doc.parseDoc(xml)?
-      let nodes: Array[Xml2Node] = doc.xpathEvalNodes("//child")?
+      let doc = Xml2Parser.parseDoc(xml) as Xml2Doc
+      let nodes: Array[Xml2Node] = doc.xpathEvalNodes("//child") as Array[Xml2Node]
       h.assert_eq[USize](2, nodes.size())
       h.assert_eq[String]("child", nodes(0)?.name())
       h.assert_eq[String]("child", nodes(1)?.name())
@@ -166,7 +166,7 @@ class \nodoc\ iso TestNodeXPathRelative is UnitTest
       </root>
       """
     try
-      let doc = Xml2Doc.parseDoc(xml)?
+      let doc = Xml2Parser.parseDoc(xml) as Xml2Doc
       let root = doc.getRootElement()?
       let sections = doc.xpathEval("//section")
       match sections
@@ -206,12 +206,12 @@ class \nodoc\ iso TestNodeXPathRelativeConvenience is UnitTest
       </root>
       """
     try
-      let doc = Xml2Doc.parseDoc(xml)?
+      let doc = Xml2Parser.parseDoc(xml) as Xml2Doc
       let root = doc.getRootElement()?
-      let sec_nodes: Array[Xml2Node] = doc.xpathEvalNodes("//section")?
+      let sec_nodes: Array[Xml2Node] = doc.xpathEvalNodes("//section") as Array[Xml2Node]
       h.assert_eq[USize](2, sec_nodes.size())
       let first_sec = sec_nodes(0)?
-      let items: Array[Xml2Node] = first_sec.xpathEvalNodes("./item")?
+      let items: Array[Xml2Node] = first_sec.xpathEvalNodes("./item") as Array[Xml2Node]
       h.assert_eq[USize](2, items.size())
       h.assert_eq[String]("one", items(0)?.getContent())
       h.assert_eq[String]("two", items(1)?.getContent())
@@ -230,7 +230,7 @@ class \nodoc\ iso TestNodeAttributesAndContent is UnitTest
       </root>
       """
     try
-      let doc = Xml2Doc.parseDoc(xml)?
+      let doc = Xml2Parser.parseDoc(xml) as Xml2Doc
       let child_res = doc.xpathEval("//child")
       match child_res
       | let nodes: Array[Xml2Node] =>
@@ -260,7 +260,7 @@ class \nodoc\ iso TestXPathScalarResults is UnitTest
       </root>
       """
     try
-      let doc = Xml2Doc.parseDoc(xml)?
+      let doc = Xml2Parser.parseDoc(xml) as Xml2Doc
 
       // count() -> number
       let count_res = doc.xpathEval("count(//child)")
@@ -304,18 +304,18 @@ class \nodoc\ iso TestXPathScalarResultsConvenience is UnitTest
       </root>
       """
     try
-      let doc = Xml2Doc.parseDoc(xml)?
+      let doc = Xml2Parser.parseDoc(xml) as Xml2Doc
 
       // count() -> number
-      let n: F64 = doc.xpathEvalF64("count(//child)")?
+      let n: F64 = doc.xpathEvalF64("count(//child)") as F64
       h.assert_true(n.usize() == 2)
 
       // boolean() -> bool
-      let b: Bool = doc.xpathEvalBool("boolean(//child[@id='c1'])")?
+      let b: Bool = doc.xpathEvalBool("boolean(//child[@id='c1'])") as Bool
       h.assert_true(b)
 
       // string() -> string
-      let s: String val = doc.xpathEvalString("string(//child[@id='c2'])")?
+      let s: String val = doc.xpathEvalString("string(//child[@id='c2'])") as String val
       h.assert_eq[String]("2", s)
     else
       h.fail("Exception in TestXPathScalarResults")
@@ -367,7 +367,7 @@ class \nodoc\ iso TestCreateAndAppendChildren is UnitTest
       h.assert_true(xml.contains("<child>World</child>"))
 
       // Verify XPath works on created documents
-      let children = doc.xpathEvalNodes("//child")?
+      let children = doc.xpathEvalNodes("//child") as Array[Xml2Node]
       h.assert_eq[USize](2, children.size())
     else
       h.fail("Failed to create and append children")
@@ -410,16 +410,16 @@ class \nodoc\ iso TestCreateAndXPath is UnitTest
       root.appendChild(book2)?
 
       // Test XPath queries on created document
-      let books = doc.xpathEvalNodes("//book")?
+      let books = doc.xpathEvalNodes("//book") as Array[Xml2Node]
       h.assert_eq[USize](2, books.size())
 
-      let titles = doc.xpathEvalNodes("//title")?
+      let titles = doc.xpathEvalNodes("//title") as Array[Xml2Node]
       h.assert_eq[USize](2, titles.size())
 
-      let count = doc.xpathEvalF64("count(//book)")?
+      let count = doc.xpathEvalF64("count(//book)") as F64
       h.assert_eq[USize](2, count.usize())
 
-      let first_title = doc.xpathEvalString("string(//book[@id='bk101']/title)")?
+      let first_title = doc.xpathEvalString("string(//book[@id='bk101']/title)") as String val
       h.assert_eq[String]("XML Developer's Guide", first_title)
     else
       h.fail("Failed XPath on created document")
@@ -441,7 +441,7 @@ class \nodoc\ iso TestCreateAndSaveFile is UnitTest
       doc.saveToFile(auth, "test_created.xml")?
 
       // Read back and verify
-      let doc2 = Xml2Doc.parseFile(auth, "test_created.xml")?
+      let doc2 = Xml2Parser.parseFile(auth, "test_created.xml") as Xml2Doc
       let root2 = doc2.getRootElement()?
       h.assert_eq[String]("test", root2.name())
       let children = root2.getChildren()
