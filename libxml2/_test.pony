@@ -78,6 +78,7 @@ actor \nodoc\ Main is TestList
     test(TestParseDocErrorRecovery)
     test(TestParseDocEntitiesNotSubstitutedByDefault)
     // Crash-resistance fuzz tests (PonyCheck Property1)
+    test(Property1UnitTest[String](recover iso FuzzParseDoc end))
     test(Property1UnitTest[(String, String)](
       recover iso FuzzCreateAndCreateElement end))
     test(Property1UnitTest[(String, String)](
