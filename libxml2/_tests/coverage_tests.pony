@@ -1198,3 +1198,175 @@ class \nodoc\ iso TestGetPropNs is UnitTest
     else
       h.fail("Failed to parse XML or exercise getPropNs")
     end
+
+class \nodoc\ iso TestParserOptionsDefaults is UnitTest
+  """
+  Verify that the default-constructed Xml2ParserOptions is
+  safe-by-default: no_net is enabled, entity substitution is disabled,
+  external DTD subset is not loaded.
+  """
+  fun name(): String => "xml2parseroptions/defaults"
+
+  fun apply(h: TestHelper) =>
+    let defaults = Xml2ParserOptions.create()
+    h.assert_eq[Bool](true,  defaults.no_net)
+    h.assert_eq[Bool](false, defaults.substitute_entities)
+    h.assert_eq[Bool](false, defaults.load_dtd)
+    h.assert_eq[Bool](false, defaults.load_dtd_attrs)
+    h.assert_eq[Bool](false, defaults.error_recovery)
+    h.assert_eq[Bool](false, defaults.no_blanks)
+    h.assert_eq[Bool](false, defaults.pedantic)
+    h.assert_eq[Bool](false, defaults.huge)
+    // to_flags() must include XML_PARSE_NONET (2048) and nothing else.
+    h.assert_eq[I32](2048, defaults.to_flags())
+
+class \nodoc\ iso TestParserOptionsFlagComposition is UnitTest
+  """
+  Verify that enabling multiple options OR's their bits correctly into
+  the flag bitmask passed to libxml2.
+  """
+  fun name(): String => "xml2parseroptions/flag-composition"
+
+  fun apply(h: TestHelper) =>
+    // Compose every flag set to true.
+    let all_on = Xml2ParserOptions.create(
+      where
+        error_recovery' = true,
+        substitute_entities' = true,
+        no_blanks' = true,
+        no_net' = true,
+        load_dtd' = true,
+        load_dtd_attrs' = true,
+        pedantic' = true,
+        huge' = true)
+    // Expected: 1 + 2 + 4 + 8 + 128 + 256 + 2048 + 524288
+    h.assert_eq[I32](526735, all_on.to_flags())
+
+    // Compose nothing.
+    let all_off = Xml2ParserOptions.create(
+      where no_net' = false)
+    h.assert_eq[I32](0, all_off.to_flags())
+
+    // Compose a typical "lenient parse" config.
+    let lenient = Xml2ParserOptions.create(
+      where error_recovery' = true, no_blanks' = true)
+    // 1 (RECOVER) + 256 (NOBLANKS) + 2048 (NONET) = 2305
+    h.assert_eq[I32](2305, lenient.to_flags())
+
+class \nodoc\ iso TestParseDocNoBlanks is UnitTest
+  """
+  no_blanks = true should cause libxml2 to discard ignorable whitespace
+  text nodes between elements. Without it, indentation produces text
+  nodes between element children.
+  """
+  fun name(): String => "xml2doc/parse-no-blanks"
+
+  fun apply(h: TestHelper) =>
+    let xml =
+      """
+      <root>
+        <a/>
+        <b/>
+        <c/>
+      </root>
+      """
+    try
+      // Default: blank text nodes preserved. getChildren() returns
+      // element-only children, so we can't distinguish via that API
+      // alone; instead, serialize and look for the indentation.
+      let doc_default = Xml2Doc.parseDoc(xml)?
+      let root_default = doc_default.getRootElement()?
+      let dump_default = root_default.nodeDump(0, 0)
+      // With blanks preserved, nodeDump output includes the original
+      // indentation between elements.
+      h.assert_true(dump_default.contains("\n  <a/>"))
+
+      // With no_blanks: ignorable whitespace dropped during parse.
+      // The serialized form has no inter-element whitespace.
+      let opts = Xml2ParserOptions.create(where no_blanks' = true)
+      let doc_no_blanks = Xml2Doc.parseDoc(xml, opts)?
+      let root_no_blanks = doc_no_blanks.getRootElement()?
+      let dump_no_blanks = root_no_blanks.nodeDump(0, 0)
+      h.assert_eq[String](
+        "<root><a/><b/><c/></root>", dump_no_blanks)
+    else
+      h.fail("Failed to parse XML")
+    end
+
+class \nodoc\ iso TestParseDocErrorRecovery is UnitTest
+  """
+  error_recovery = true should cause libxml2 to return a (partial)
+  document for malformed input that would otherwise fail to parse.
+  """
+  fun name(): String => "xml2doc/parse-error-recovery"
+
+  fun apply(h: TestHelper) =>
+    // Malformed: tag never closed.
+    let malformed = "<root><a><b></a>"
+
+    // Default: strict parse fails on this input.
+    try
+      let _ = Xml2Doc.parseDoc(malformed)?
+      h.fail("Default parse should have rejected malformed XML")
+    end
+
+    // error_recovery = true: parse succeeds, returning a doc that
+    // libxml2 reconstructed as best it could.
+    let opts = Xml2ParserOptions.create(where error_recovery' = true)
+    try
+      let doc = Xml2Doc.parseDoc(malformed, opts)?
+      let root = doc.getRootElement()?
+      // Whatever libxml2 recovers, the doc has a usable root.
+      h.assert_eq[String]("root", root.name())
+    else
+      h.fail("error_recovery should have allowed parse to succeed")
+    end
+
+class \nodoc\ iso TestParseDocEntitiesNotSubstitutedByDefault is UnitTest
+  """
+  By default, substitute_entities is false, so internal entity
+  references remain as entity-reference nodes in the document and are
+  preserved during serialization. With substitute_entities = true,
+  libxml2 expands them inline.
+
+  This guards the XXE-relevant defaults: a future regression that
+  enabled XML_PARSE_NOENT by accident would re-introduce the
+  attack surface for hostile inputs.
+  """
+  fun name(): String => "xml2doc/parse-entities-not-substituted-by-default"
+
+  fun apply(h: TestHelper) =>
+    let xml =
+      "<!DOCTYPE foo [<!ENTITY hello \"WORLD\">]><foo>&hello;</foo>"
+
+    // Default: entity reference preserved.
+    try
+      let doc = Xml2Doc.parseDoc(xml)?
+      let foo = doc.getRootElement()?
+      let dump = foo.nodeDump(0, 0)
+      h.assert_true(
+        dump.contains("&hello;"),
+        "expected entity reference to be preserved, got: " + dump)
+      h.assert_false(
+        dump.contains("WORLD"),
+        "entity value must not appear in element body, got: " + dump)
+    else
+      h.fail("Default parse of internal entity should have succeeded")
+    end
+
+    // substitute_entities = true: entity expanded inline.
+    let opts = Xml2ParserOptions.create(
+      where substitute_entities' = true)
+    try
+      let doc = Xml2Doc.parseDoc(xml, opts)?
+      let foo = doc.getRootElement()?
+      let dump = foo.nodeDump(0, 0)
+      h.assert_false(
+        dump.contains("&hello;"),
+        "entity ref must be gone after substitution, got: " + dump)
+      h.assert_true(
+        dump.contains("WORLD"),
+        "expected expanded value in element body, got: " + dump)
+    else
+      h.fail("substitute_entities parse should have succeeded")
+    end
