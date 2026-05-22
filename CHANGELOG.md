@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a CHANGELOG](http://keepachangelog.com/).
 
-## [unreleased] - unreleased
+## [1.2.0] - 2026-05-22
 
 ### Fixed
 
@@ -14,9 +14,6 @@ All notable changes to this project will be documented in this file. This projec
 
 - Adds namespace-aware accessors to Xml2Node ([PR #34](https://github.com/contact-red/libxml2/pull/34))
 - Returns errors as data from parsing and XPath ([PR #36](https://github.com/contact-red/libxml2/pull/36))
-
-### Changed
-
 
 ## [1.1.2] - 2026-05-22
 
