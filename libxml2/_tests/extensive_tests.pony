@@ -1528,3 +1528,510 @@ class \nodoc\ iso TestFromPTRRejectsNull is UnitTest
     else
       h.fail("could not even build the doc to test fromPTR null path")
     end
+
+// ---------------------------------------------------------------
+// Primitive identity sweeps
+// ---------------------------------------------------------------
+
+class \nodoc\ iso TestAllXml2ErrorDomainPrimitives is UnitTest
+  """
+  Iterate the full libxml2 error-domain enum and verify each
+  integer code maps to the documented `Xml2ErrorDomain*` primitive
+  via `Xml2ErrorDomainFromI32`, and that each primitive's
+  `string()` method returns the documented short name. Out-of-
+  range codes map to `Xml2ErrorDomainUnknown`.
+
+  This catches any drift between the libxml2 `xmlErrorDomain` enum
+  ordering and the Pony-side mapping table.
+  """
+  fun name(): String => "extensive/all-error-domain-primitives"
+
+  fun apply(h: TestHelper) =>
+    h.assert_true(Xml2ErrorDomainFromI32(0)  is Xml2ErrorDomainNone)
+    h.assert_true(Xml2ErrorDomainFromI32(1)  is Xml2ErrorDomainParser)
+    h.assert_true(Xml2ErrorDomainFromI32(2)  is Xml2ErrorDomainTree)
+    h.assert_true(Xml2ErrorDomainFromI32(3)  is Xml2ErrorDomainNamespace)
+    h.assert_true(Xml2ErrorDomainFromI32(4)  is Xml2ErrorDomainDtd)
+    h.assert_true(Xml2ErrorDomainFromI32(5)  is Xml2ErrorDomainHtml)
+    h.assert_true(Xml2ErrorDomainFromI32(6)  is Xml2ErrorDomainMemory)
+    h.assert_true(Xml2ErrorDomainFromI32(7)  is Xml2ErrorDomainOutput)
+    h.assert_true(Xml2ErrorDomainFromI32(8)  is Xml2ErrorDomainIo)
+    h.assert_true(Xml2ErrorDomainFromI32(9)  is Xml2ErrorDomainFtp)
+    h.assert_true(Xml2ErrorDomainFromI32(10) is Xml2ErrorDomainHttp)
+    h.assert_true(Xml2ErrorDomainFromI32(11) is Xml2ErrorDomainXInclude)
+    h.assert_true(Xml2ErrorDomainFromI32(12) is Xml2ErrorDomainXPath)
+    h.assert_true(Xml2ErrorDomainFromI32(13) is Xml2ErrorDomainXPointer)
+    h.assert_true(Xml2ErrorDomainFromI32(14) is Xml2ErrorDomainRegexp)
+    h.assert_true(Xml2ErrorDomainFromI32(15) is Xml2ErrorDomainDatatype)
+    h.assert_true(Xml2ErrorDomainFromI32(16) is Xml2ErrorDomainSchemasParser)
+    h.assert_true(Xml2ErrorDomainFromI32(17) is Xml2ErrorDomainSchemasValid)
+    h.assert_true(Xml2ErrorDomainFromI32(18) is Xml2ErrorDomainRelaxNgParser)
+    h.assert_true(Xml2ErrorDomainFromI32(19) is Xml2ErrorDomainRelaxNgValid)
+    h.assert_true(Xml2ErrorDomainFromI32(20) is Xml2ErrorDomainCatalog)
+    h.assert_true(Xml2ErrorDomainFromI32(21) is Xml2ErrorDomainC14n)
+    h.assert_true(Xml2ErrorDomainFromI32(22) is Xml2ErrorDomainXslt)
+    h.assert_true(Xml2ErrorDomainFromI32(23) is Xml2ErrorDomainValid)
+    h.assert_true(Xml2ErrorDomainFromI32(24) is Xml2ErrorDomainCheck)
+    h.assert_true(Xml2ErrorDomainFromI32(25) is Xml2ErrorDomainWriter)
+    h.assert_true(Xml2ErrorDomainFromI32(26) is Xml2ErrorDomainModule)
+    h.assert_true(Xml2ErrorDomainFromI32(27) is Xml2ErrorDomainI18n)
+    h.assert_true(Xml2ErrorDomainFromI32(28) is Xml2ErrorDomainSchematronValid)
+    h.assert_true(Xml2ErrorDomainFromI32(29) is Xml2ErrorDomainBuffer)
+    h.assert_true(Xml2ErrorDomainFromI32(30) is Xml2ErrorDomainUri)
+    h.assert_true(Xml2ErrorDomainFromI32(31) is Xml2ErrorDomainUnknown)
+    h.assert_true(Xml2ErrorDomainFromI32(-1) is Xml2ErrorDomainUnknown)
+
+    // Per-primitive string() round-trip.
+    h.assert_eq[String]("None",            Xml2ErrorDomainNone.string())
+    h.assert_eq[String]("Parser",          Xml2ErrorDomainParser.string())
+    h.assert_eq[String]("Tree",            Xml2ErrorDomainTree.string())
+    h.assert_eq[String]("Namespace",       Xml2ErrorDomainNamespace.string())
+    h.assert_eq[String]("Dtd",             Xml2ErrorDomainDtd.string())
+    h.assert_eq[String]("Html",            Xml2ErrorDomainHtml.string())
+    h.assert_eq[String]("Memory",          Xml2ErrorDomainMemory.string())
+    h.assert_eq[String]("Output",          Xml2ErrorDomainOutput.string())
+    h.assert_eq[String]("Io",              Xml2ErrorDomainIo.string())
+    h.assert_eq[String]("Ftp",             Xml2ErrorDomainFtp.string())
+    h.assert_eq[String]("Http",            Xml2ErrorDomainHttp.string())
+    h.assert_eq[String]("XInclude",        Xml2ErrorDomainXInclude.string())
+    h.assert_eq[String]("XPath",           Xml2ErrorDomainXPath.string())
+    h.assert_eq[String]("XPointer",        Xml2ErrorDomainXPointer.string())
+    h.assert_eq[String]("Regexp",          Xml2ErrorDomainRegexp.string())
+    h.assert_eq[String]("Datatype",        Xml2ErrorDomainDatatype.string())
+    h.assert_eq[String]("SchemasParser",   Xml2ErrorDomainSchemasParser.string())
+    h.assert_eq[String]("SchemasValid",    Xml2ErrorDomainSchemasValid.string())
+    h.assert_eq[String]("RelaxNgParser",   Xml2ErrorDomainRelaxNgParser.string())
+    h.assert_eq[String]("RelaxNgValid",    Xml2ErrorDomainRelaxNgValid.string())
+    h.assert_eq[String]("Catalog",         Xml2ErrorDomainCatalog.string())
+    h.assert_eq[String]("C14n",            Xml2ErrorDomainC14n.string())
+    h.assert_eq[String]("Xslt",            Xml2ErrorDomainXslt.string())
+    h.assert_eq[String]("Valid",           Xml2ErrorDomainValid.string())
+    h.assert_eq[String]("Check",           Xml2ErrorDomainCheck.string())
+    h.assert_eq[String]("Writer",          Xml2ErrorDomainWriter.string())
+    h.assert_eq[String]("Module",          Xml2ErrorDomainModule.string())
+    h.assert_eq[String]("I18n",            Xml2ErrorDomainI18n.string())
+    h.assert_eq[String]("SchematronValid", Xml2ErrorDomainSchematronValid.string())
+    h.assert_eq[String]("Buffer",          Xml2ErrorDomainBuffer.string())
+    h.assert_eq[String]("Uri",             Xml2ErrorDomainUri.string())
+    h.assert_eq[String]("Unknown",         Xml2ErrorDomainUnknown.string())
+
+class \nodoc\ iso TestAllXml2ErrorLevelPrimitives is UnitTest
+  """
+  All four documented libxml2 `xmlErrorLevel` values plus the
+  out-of-range fall-through map correctly through
+  `Xml2ErrorLevelFromI32` and report the expected `string()`.
+  """
+  fun name(): String => "extensive/all-error-level-primitives"
+
+  fun apply(h: TestHelper) =>
+    h.assert_true(Xml2ErrorLevelFromI32(0)   is Xml2ErrorLevelNone)
+    h.assert_true(Xml2ErrorLevelFromI32(1)   is Xml2ErrorLevelWarning)
+    h.assert_true(Xml2ErrorLevelFromI32(2)   is Xml2ErrorLevelError)
+    h.assert_true(Xml2ErrorLevelFromI32(3)   is Xml2ErrorLevelFatal)
+    h.assert_true(Xml2ErrorLevelFromI32(4)   is Xml2ErrorLevelUnknown)
+    h.assert_true(Xml2ErrorLevelFromI32(-1)  is Xml2ErrorLevelUnknown)
+    h.assert_eq[String]("None",    Xml2ErrorLevelNone.string())
+    h.assert_eq[String]("Warning", Xml2ErrorLevelWarning.string())
+    h.assert_eq[String]("Error",   Xml2ErrorLevelError.string())
+    h.assert_eq[String]("Fatal",   Xml2ErrorLevelFatal.string())
+    h.assert_eq[String]("Unknown", Xml2ErrorLevelUnknown.string())
+
+class \nodoc\ iso TestAllXPathTypePrimitives is UnitTest
+  """
+  All ten libxml2 `xmlXPathObjectType` integers have a
+  corresponding `XPathType*` primitive whose `apply()` returns the
+  expected integer code. Catches drift between libxml2's enum
+  ordering and the Pony-side primitive set.
+  """
+  fun name(): String => "extensive/all-xpath-type-primitives"
+
+  fun apply(h: TestHelper) =>
+    h.assert_eq[I32](0, XPathTypeUndefined())
+    h.assert_eq[I32](1, XPathTypeNodeset())
+    h.assert_eq[I32](2, XPathTypeBoolean())
+    h.assert_eq[I32](3, XPathTypeNumber())
+    h.assert_eq[I32](4, XPathTypeString())
+    h.assert_eq[I32](5, XPathTypePoint())
+    h.assert_eq[I32](6, XPathTypeRange())
+    h.assert_eq[I32](7, XPathTypeLocationSet())
+    h.assert_eq[I32](8, XPathTypeUsers())
+    h.assert_eq[I32](9, XPathTypeXsltTree())
+
+// ---------------------------------------------------------------
+// Edge cases on text / comment / attribute creation
+// ---------------------------------------------------------------
+
+class \nodoc\ iso TestCreateTextNodeEntityChars is UnitTest
+  """
+  Text nodes containing the five XML special characters (`<`,
+  `>`, `&`, `'`, `"`) must escape them in the serialised output.
+  libxml2 does this transparently on `xmlNodeSetContent` /
+  `xmlNewDocText`.
+  """
+  fun name(): String => "extensive/text-node-entity-chars"
+
+  fun apply(h: TestHelper) =>
+    try
+      let doc = Xml2Doc.createWithRoot("r")?
+      let root = doc.getRootElement()?
+      let txt = doc.createTextNode(
+        "a < b & c > d \"quoted\" 'apostrophe'")?
+      root.appendChild(txt)?
+      let s = doc.serialize(false)?
+      // < > & must be escaped; apostrophes and quotes are
+      // typically passed through in text (only attribute values
+      // require quote escaping).
+      h.assert_true(s.contains("a &lt; b &amp; c &gt; d"),
+        "expected < > & escaped in text body; got: " + s)
+      // Round-trip must restore original characters.
+      match Xml2Parser.parseDoc(s)
+      | let doc2: Xml2Doc =>
+        h.assert_eq[String](
+          "a < b & c > d \"quoted\" 'apostrophe'",
+          doc2.getRootElement()?.getContent())
+      | let err: Xml2Error =>
+        h.fail("re-parse failed: " + err.string())
+      end
+    else
+      h.fail("text-node entity-char flow failed")
+    end
+
+class \nodoc\ iso TestCreateCommentEdgeCases is UnitTest
+  """
+  `createComment` with empty / single-character / space-only
+  content produces nodes that survive serialise + re-parse. (XML
+  forbids `--` inside comments; that's the user's responsibility
+  rather than something the binding validates, so we don't probe
+  it here.)
+  """
+  fun name(): String => "extensive/create-comment-edge-cases"
+
+  fun apply(h: TestHelper) =>
+    try
+      let doc = Xml2Doc.createWithRoot("r")?
+      let root = doc.getRootElement()?
+      let empty_comment = doc.createComment("")?
+      let space_comment = doc.createComment(" ")?
+      let unicode_comment = doc.createComment("نص عربي")?
+      root.appendChild(empty_comment)?
+      root.appendChild(space_comment)?
+      root.appendChild(unicode_comment)?
+      let s = doc.serialize(false)?
+      h.assert_true(s.contains("<!---->"),
+        "expected empty-comment delimiters; got: " + s)
+      h.assert_true(s.contains("<!-- -->"),
+        "expected single-space comment; got: " + s)
+      h.assert_true(s.contains("نص عربي"),
+        "expected unicode comment content preserved; got: " + s)
+      // Re-parse must succeed.
+      match Xml2Parser.parseDoc(s)
+      | let _: Xml2Doc => None
+      | let err: Xml2Error =>
+        h.fail("re-parse failed: " + err.string())
+      end
+    else
+      h.fail("create-comment edge-case flow failed")
+    end
+
+class \nodoc\ iso TestSetPropEmptyValue is UnitTest
+  """
+  `setProp(name, "")` creates an attribute with an empty value
+  that's distinct from "attribute absent": `getProp` returns "" in
+  both cases, but `getProps()` lists the explicitly-set one.
+  """
+  fun name(): String => "extensive/set-prop-empty-value"
+
+  fun apply(h: TestHelper) =>
+    try
+      let doc = Xml2Doc.createWithRoot("r")?
+      let root = doc.getRootElement()?
+      root.setProp("present", "")
+      // getProp returns "" for both present-empty and absent.
+      h.assert_eq[String]("", root.getProp("present"))
+      h.assert_eq[String]("", root.getProp("absent"))
+      // getProps must list `present` exactly once.
+      let props = root.getProps()
+      h.assert_eq[USize](1, props.size())
+      h.assert_eq[String]("present", props(0)?._1)
+      h.assert_eq[String]("", props(0)?._2)
+      // Serialised form must include `present=""`.
+      let s = doc.serialize(false)?
+      h.assert_true(s.contains("present=\"\""),
+        "expected empty-value attribute in serialised form; got: " + s)
+    else
+      h.fail("set-prop-empty flow failed")
+    end
+
+class \nodoc\ iso TestGetContentMixedChildren is UnitTest
+  """
+  `getContent` on an element with mixed text and element children
+  returns the concatenated text content of the whole subtree
+  (libxml2's `xmlNodeGetContent` walks descendants).
+  """
+  fun name(): String => "extensive/get-content-mixed-children"
+
+  fun apply(h: TestHelper) =>
+    match Xml2Parser.parseDoc("<r>hello <b>bold</b> world</r>")
+    | let doc: Xml2Doc =>
+      try
+        let root = doc.getRootElement()?
+        h.assert_eq[String]("hello bold world", root.getContent())
+        // getChildren returns only the element children, not text.
+        let kids = root.getChildren()
+        h.assert_eq[USize](1, kids.size())
+        h.assert_eq[String]("b", kids(0)?.name())
+        h.assert_eq[String]("bold", kids(0)?.getContent())
+      else
+        h.fail("traversal failed")
+      end
+    | let err: Xml2Error =>
+      h.fail("parse failed: " + err.string())
+    end
+
+class \nodoc\ iso TestAddChildWithContent is UnitTest
+  """
+  `Xml2Node.addChild(name, content)` creates and appends in one
+  step. Verify both the resulting child has the requested name
+  AND its content equals what was passed.
+  """
+  fun name(): String => "extensive/add-child-with-content"
+
+  fun apply(h: TestHelper) =>
+    try
+      let doc = Xml2Doc.createWithRoot("r")?
+      let root = doc.getRootElement()?
+      let added_full = root.addChild("with-content", "hello")?
+      let added_empty = root.addChild("no-content")?
+      h.assert_eq[String]("with-content", added_full.name())
+      h.assert_eq[String]("hello", added_full.getContent())
+      h.assert_eq[String]("no-content", added_empty.name())
+      h.assert_eq[String]("", added_empty.getContent())
+      // Both must appear as element children of the root.
+      h.assert_eq[USize](2, root.getChildren().size())
+    else
+      h.fail("addChild flow failed")
+    end
+
+class \nodoc\ iso TestCommentsFilteredFromGetChildren is UnitTest
+  """
+  `getChildren` filters to element nodes only - comments and
+  text-only nodes are skipped. XPath's `*` axis agrees: it
+  matches elements, not comments.
+  """
+  fun name(): String => "extensive/comments-filtered-from-getchildren"
+
+  fun apply(h: TestHelper) =>
+    let xml =
+      "<r><a/><!-- comment --><b/><!-- another --><c/></r>"
+    match Xml2Parser.parseDoc(xml)
+    | let doc: Xml2Doc =>
+      try
+        let root = doc.getRootElement()?
+        // Three element children; the two comments are filtered.
+        h.assert_eq[USize](3, root.getChildren().size())
+        h.assert_eq[String]("a", root.getChildren()(0)?.name())
+        h.assert_eq[String]("b", root.getChildren()(1)?.name())
+        h.assert_eq[String]("c", root.getChildren()(2)?.name())
+        // XPath /r/* matches the same three elements.
+        match doc.xpathEvalF64("count(/r/*)")
+        | let f: F64 => h.assert_eq[F64](3.0, f)
+        | let _: Xml2Error => h.fail("count(/r/*) failed")
+        end
+        // XPath /r/comment() matches the two comments.
+        match doc.xpathEvalF64("count(/r/comment())")
+        | let f: F64 => h.assert_eq[F64](2.0, f)
+        | let _: Xml2Error => h.fail("count(/r/comment()) failed")
+        end
+      else
+        h.fail("traversal failed")
+      end
+    | let err: Xml2Error =>
+      h.fail("parse failed: " + err.string())
+    end
+
+class \nodoc\ iso TestSerializeUnsupportedEncoding is UnitTest
+  """
+  `serialize` with an unknown encoding name must not crash. The
+  expected behaviour is libxml2 either rejects (and the partial
+  function raises) or falls back. Either is acceptable; the test
+  guards against an unrecoverable crash that the "safe from
+  crashes" promise forbids.
+  """
+  fun name(): String => "extensive/serialize-unsupported-encoding"
+
+  fun apply(h: TestHelper) =>
+    try
+      let doc = Xml2Doc.createWithRoot("root")?
+      try
+        let s = doc.serialize(false, "this-encoding-does-not-exist")?
+        // Successful return is acceptable as long as we get a
+        // String of some kind. Trivially true once s is bound.
+        h.assert_true(s.size() >= 0)
+      end
+      // Whether we reached here via success or partial-error, the
+      // process did not crash - that's the contract.
+      h.assert_true(true)
+    else
+      h.fail("could not build doc for unsupported-encoding test")
+    end
+
+// ---------------------------------------------------------------
+// Error-path field assertions
+// ---------------------------------------------------------------
+
+class \nodoc\ iso TestXPathErrorFields is UnitTest
+  """
+  Triggering a malformed XPath expression must produce an
+  `Xml2Error` with domain set to `Xml2ErrorDomainXPath`, a
+  non-zero error code, and a non-empty message.
+  """
+  fun name(): String => "extensive/xpath-error-fields"
+
+  fun apply(h: TestHelper) =>
+    match Xml2Parser.parseDoc("<r><a/></r>")
+    | let doc: Xml2Doc =>
+      match doc.xpathEvalNodes("invalid[expression")
+      | let _: Array[Xml2Node] =>
+        h.fail("malformed XPath should not have succeeded")
+      | let err: Xml2Error =>
+        h.assert_true(
+          err.domain is Xml2ErrorDomainXPath,
+          "expected domain=XPath; got " + err.domain.string())
+        h.assert_ne[I32](I32(0), err.code)
+        h.assert_true(err.message.size() > 0,
+          "expected non-empty error message")
+      end
+    | let err: Xml2Error =>
+      h.fail("setup parse failed: " + err.string())
+    end
+
+class \nodoc\ iso TestParseFileMissingFile is UnitTest
+  """
+  `Xml2Parser.parseFile` on a non-existent path must return an
+  `Xml2Error` (not crash), and the error's domain should reflect
+  an I/O failure - libxml2 reports this in the `IO` domain.
+  """
+  fun name(): String => "extensive/parse-file-missing-file"
+
+  fun apply(h: TestHelper) =>
+    let auth = FileAuth(h.env.root)
+    match Xml2Parser.parseFile(
+      auth, "/tmp/this-file-really-should-not-exist-xyz-12345.xml")
+    | let _: Xml2Doc =>
+      h.fail("parseFile on missing file should not have succeeded")
+    | let err: Xml2Error =>
+      // libxml2 reports missing-file errors in the IO domain.
+      h.assert_true(
+        err.domain is Xml2ErrorDomainIo,
+        "expected domain=Io for missing file; got "
+          + err.domain.string())
+      h.assert_ne[I32](I32(0), err.code)
+    end
+
+class \nodoc\ iso TestParseErrorFieldsAreAccessible is UnitTest
+  """
+  After a parse error, every `Xml2Error` field is readable
+  without raising or crashing. This is a structural-access
+  guarantee rather than a value assertion - the str1/str2/str3
+  and int1/int2 fields are populated by libxml2 for some error
+  classes and left empty for others, so we can't assert specific
+  contents portably. The point is the wrapper exposes them.
+  """
+  fun name(): String => "extensive/parse-error-fields-accessible"
+
+  fun apply(h: TestHelper) =>
+    match Xml2Parser.parseDoc("<root><unclosed")
+    | let _: Xml2Doc =>
+      h.fail("malformed XML should have errored")
+    | let err: Xml2Error =>
+      // Read every field; assert structural sanity where we can.
+      h.assert_true(
+        err.domain is Xml2ErrorDomainParser,
+        "expected parser-domain error")
+      let level_is_real_error =
+        (err.level is Xml2ErrorLevelError) or
+        (err.level is Xml2ErrorLevelFatal)
+      h.assert_true(level_is_real_error,
+        "expected level >= Error")
+      h.assert_ne[I32](I32(0), err.code)
+      h.assert_true(err.message.size() > 0,
+        "expected non-empty message")
+      // file can be empty for in-memory parsing - just access it.
+      let _ = err.file.size()
+      // line should be >= 0 (libxml2 may use 0 for unknown).
+      h.assert_true(err.line >= I32(0),
+        "line should be non-negative; got " + err.line.string())
+      // str1/str2/str3 and int1/int2 are accessible; their values
+      // are libxml2-error-specific. Just exercise the getters.
+      let _ = err.str1.size()
+      let _ = err.str2.size()
+      let _ = err.str3.size()
+      let _ = err.int1
+      let _ = err.int2
+    end
+
+// ---------------------------------------------------------------
+// Property-based: element-name and multi-prop coverage
+// ---------------------------------------------------------------
+
+class \nodoc\ iso PropElementNameRoundTrip is Property1[String]
+  """
+  For any valid XML element name (ASCII letters, length 1-32),
+  `createElement(name)` produces a node whose `name()` is the
+  input. Verifies that the binding doesn't mangle names en
+  route to libxml2 and back.
+  """
+  fun name(): String =>
+    "extensive/element-name-roundtrip/property"
+
+  fun params(): PropertyParams =>
+    PropertyParams(where num_samples' = 500)
+
+  fun gen(): Generator[String] =>
+    Generators.ascii_letters(1, 32)
+
+  fun ref property(arg1: String, h: PropertyHelper) =>
+    h.assert_no_error({() ? =>
+      let doc = Xml2Doc.create()?
+      let elem = doc.createElement(arg1)?
+      doc.setRootElement(elem)?
+      h.assert_eq[String](arg1, doc.getRootElement()?.name())
+    } box)
+
+class \nodoc\ iso PropMultiplePropsAllRetrievable
+  is Property1[USize]
+  """
+  For N (name, value) pairs where names are guaranteed unique via
+  indexing (`a0`..`aN-1`), every pair is retrievable via
+  `getProp(name)` independently and `getProps()` reports exactly
+  N entries.
+  """
+  fun name(): String =>
+    "extensive/multiple-props-all-retrievable/property"
+
+  fun params(): PropertyParams =>
+    PropertyParams(where num_samples' = 500)
+
+  fun gen(): Generator[USize] =>
+    Generators.usize(where min = USize(0), max = USize(100))
+
+  fun ref property(arg1: USize, h: PropertyHelper) =>
+    h.assert_no_error({() ? =>
+      let doc = Xml2Doc.createWithRoot("root")?
+      let root = doc.getRootElement()?
+      var i: USize = 0
+      while i < arg1 do
+        root.setProp("a" + i.string(), "v" + i.string())
+        i = i + 1
+      end
+      // Each name retrievable independently.
+      var k: USize = 0
+      while k < arg1 do
+        h.assert_eq[String](
+          "v" + k.string(),
+          root.getProp("a" + k.string()))
+        k = k + 1
+      end
+      // Cardinality matches.
+      h.assert_eq[USize](arg1, root.getProps().size())
+    } box)

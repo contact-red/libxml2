@@ -125,6 +125,25 @@ actor \nodoc\ Main is TestList
     test(TestXmlSpaceAttributePreserved)
     test(TestNamespacePrefixShadowing)
     test(TestFromPTRRejectsNull)
+    // Extensive API coverage (batch 4: primitive sweeps + edges
+    // + error-field reads + remaining property-based)
+    test(TestAllXml2ErrorDomainPrimitives)
+    test(TestAllXml2ErrorLevelPrimitives)
+    test(TestAllXPathTypePrimitives)
+    test(TestCreateTextNodeEntityChars)
+    test(TestCreateCommentEdgeCases)
+    test(TestSetPropEmptyValue)
+    test(TestGetContentMixedChildren)
+    test(TestAddChildWithContent)
+    test(TestCommentsFilteredFromGetChildren)
+    test(TestSerializeUnsupportedEncoding)
+    test(TestXPathErrorFields)
+    test(TestParseFileMissingFile)
+    test(TestParseErrorFieldsAreAccessible)
+    test(Property1UnitTest[String](
+      recover iso PropElementNameRoundTrip end))
+    test(Property1UnitTest[USize](
+      recover iso PropMultiplePropsAllRetrievable end))
     // Crash-resistance fuzz tests (PonyCheck Property1)
     test(Property1UnitTest[String](recover iso FuzzParseDoc end))
     test(Property1UnitTest[(String, String)](
