@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file. This projec
 
 - Adds parser options and safer parsing defaults ([PR #35](https://github.com/contact-red/libxml2/pull/35))
 - Returns errors as data from parsing and XPath ([PR #36](https://github.com/contact-red/libxml2/pull/36))
+- Fixes memory leak on every node accessor ([PR #38](https://github.com/contact-red/libxml2/pull/38))
 
 ### Added
 
