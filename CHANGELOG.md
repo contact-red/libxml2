@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Added
 
+- Adds namespace-aware accessors to Xml2Node ([PR #34](https://github.com/contact-red/libxml2/pull/34))
 
 ### Changed
 
