@@ -112,12 +112,88 @@ class Xml2Node
 
   fun ref name(): String val =>
     """
-    Return this node’s name as a Pony `String`.
+    Return this node’s local name as a Pony `String`.
 
-    The name is obtained from the underlying `xmlNode->name` C string and
-    cloned into a Pony-managed string.
+    For an element written `<glib:signal>`, this returns `"signal"`. The
+    namespace prefix (if any) is reported separately by
+    `namespacePrefix()`. To distinguish elements with the same local
+    name in different namespaces, compare on both `namespaceUri()` and
+    `name()` (or use `qname()` for the pair).
     """
     String.from_cstring(ptr.name).clone()
+
+  fun ref namespaceUri(): String val =>
+    """
+    Return the namespace URI of this node, or an empty string if the
+    node has no namespace.
+
+    For `<glib:signal xmlns:glib="http://www.gtk.org/introspection/glib/1.0">`,
+    this returns `"http://www.gtk.org/introspection/glib/1.0"`. For
+    a node in no namespace, returns `""`.
+
+    Reads the URI from `xmlNode->ns->href` on the underlying node.
+    """
+    try
+      let ns: XmlNs = ptr.ns.apply()?
+      String.from_cstring(ns.href).clone()
+    else
+      ""
+    end
+
+  fun ref namespacePrefix(): String val =>
+    """
+    Return the namespace prefix as used in the source document (e.g.
+    `"glib"` for an element written as `<glib:signal>`), or an empty
+    string if the node is in the default namespace or has no
+    namespace.
+
+    The prefix is a source-level artifact; two namespaces with the
+    same URI may use different prefixes in different documents (or in
+    different scopes within the same document). For comparing
+    semantics across documents, use `namespaceUri()` instead.
+
+    Reads the prefix from `xmlNode->ns->prefix` on the underlying node.
+    """
+    try
+      let ns: XmlNs = ptr.ns.apply()?
+      String.from_cstring(ns.prefix).clone()
+    else
+      ""
+    end
+
+  fun ref qname(): (String val, String val) =>
+    """
+    Return the qualified name of this node as a tuple
+    `(namespace_uri, local_name)`.
+
+    Equivalent to `(namespaceUri(), name())`. Useful for matching on
+    both dimensions at once:
+
+    ```pony
+    match child.qname()
+    | ("", "method")      => // ...
+    | (glib_ns, "signal") => // ...
+    end
+    ```
+    """
+    (namespaceUri(), name())
+
+  fun ref getPropNs(uri: String, local: String): String =>
+    """
+    Get the value of an attribute on this element by namespace URI and
+    local name. Maps to libxml2’s `xmlGetNsProp`.
+
+    - `uri`: Namespace URI (e.g.
+      `"http://www.gtk.org/introspection/c/1.0"`).
+    - `local`: Local attribute name (without any prefix).
+
+    Returns the attribute value, or an empty string if no attribute
+    with that `(namespace, local)` pair is present on this element.
+    Unlike `getProp`, this resolves attributes by their URI rather
+    than by the source-level prefix, so it works correctly even when
+    a document binds the namespace under a non-conventional prefix.
+    """
+    LibXML2.xmlGetNsProp(ptr', local, uri)
 
   fun ref getLineNo(): I64 =>
     """
