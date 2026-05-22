@@ -18,7 +18,7 @@ class \nodoc\ iso TestNodeUtilityMethods is UnitTest
       </root>
       """
     try
-      let doc = Xml2Doc.parseDoc(xml)?
+      let doc = Xml2Parser.parseDoc(xml) as Xml2Doc
       let root = doc.getRootElement()?
 
       // Test getNodePath
@@ -69,7 +69,7 @@ class \nodoc\ iso TestGetLang is UnitTest
       </root>
       """
     try
-      let doc = Xml2Doc.parseDoc(xml)?
+      let doc = Xml2Parser.parseDoc(xml) as Xml2Doc
       let root = doc.getRootElement()?
 
       // Root should have lang="en"
@@ -106,7 +106,7 @@ class \nodoc\ iso TestEmptyNodeset is UnitTest
       </root>
       """
     try
-      let doc = Xml2Doc.parseDoc(xml)?
+      let doc = Xml2Parser.parseDoc(xml) as Xml2Doc
 
       // Query that matches nothing
       let res = doc.xpathEval("//nonexistent")
@@ -122,7 +122,7 @@ class \nodoc\ iso TestEmptyNodeset is UnitTest
 
       // Test convenience method throws on empty result
       try
-        let nodes = doc.xpathEvalNodes("//nonexistent")?
+        let nodes = doc.xpathEvalNodes("//nonexistent") as Array[Xml2Node]
         h.assert_eq[USize](0, nodes.size())
       end
     else
@@ -143,7 +143,7 @@ class \nodoc\ iso TestNonExistentAttribute is UnitTest
       </root>
       """
     try
-      let doc = Xml2Doc.parseDoc(xml)?
+      let doc = Xml2Parser.parseDoc(xml) as Xml2Doc
       let root = doc.getRootElement()?
       let children = root.getChildren()
       let child = children(0)?
@@ -174,7 +174,7 @@ class \nodoc\ iso TestNoElementChildren is UnitTest
       </root>
       """
     try
-      let doc = Xml2Doc.parseDoc(xml)?
+      let doc = Xml2Parser.parseDoc(xml) as Xml2Doc
       let root = doc.getRootElement()?
       let children = root.getChildren()
 
@@ -202,7 +202,7 @@ class \nodoc\ iso TestNodeDumpFormatting is UnitTest
       <root><child>hello</child></root>
       """
     try
-      let doc = Xml2Doc.parseDoc(xml)?
+      let doc = Xml2Parser.parseDoc(xml) as Xml2Doc
       let root = doc.getRootElement()?
 
       // No formatting (level=0, format=0)
@@ -237,27 +237,27 @@ class \nodoc\ iso TestXPathConvenienceWithNamespaces is UnitTest
       </root>
       """
     try
-      let doc = Xml2Doc.parseDoc(xml)?
+      let doc = Xml2Parser.parseDoc(xml) as Xml2Doc
       let ns: Array[(String val, String val)] =
         [("ns", "http://example.com/ns")]
 
       // Test xpathEvalNodes with namespaces
-      let nodes = doc.xpathEvalNodes("//ns:item", ns)?
+      let nodes = doc.xpathEvalNodes("//ns:item", ns) as Array[Xml2Node]
       h.assert_eq[USize](2, nodes.size())
 
       // Test xpathEvalString with namespaces
-      let str_val = doc.xpathEvalString("string(//ns:item[1])", ns)?
+      let str_val = doc.xpathEvalString("string(//ns:item[1])", ns) as String val
       h.assert_eq[String]("value1", str_val)
 
       // Test xpathEvalF64 with namespaces
-      let count = doc.xpathEvalF64("count(//ns:item)", ns)?
+      let count = doc.xpathEvalF64("count(//ns:item)", ns) as F64
       h.assert_true(count == 2.0)
 
       // Test xpathEvalBool with namespaces
-      let exists = doc.xpathEvalBool("boolean(//ns:item)", ns)?
+      let exists = doc.xpathEvalBool("boolean(//ns:item)", ns) as Bool
       h.assert_true(exists)
 
-      let not_exists = doc.xpathEvalBool("boolean(//ns:nonexistent)", ns)?
+      let not_exists = doc.xpathEvalBool("boolean(//ns:nonexistent)", ns) as Bool
       h.assert_false(not_exists)
     else
       h.fail("Failed to parse XML or evaluate XPath")
@@ -280,7 +280,7 @@ class \nodoc\ iso TestNodeXPathConvenienceWithNamespaces is UnitTest
       </root>
       """
     try
-      let doc = Xml2Doc.parseDoc(xml)?
+      let doc = Xml2Parser.parseDoc(xml) as Xml2Doc
       let ns: Array[(String val, String val)] =
         [("ns", "http://example.com/ns")]
 
@@ -289,20 +289,20 @@ class \nodoc\ iso TestNodeXPathConvenienceWithNamespaces is UnitTest
       let container = containers(0)?
 
       // Test node-level xpathEvalNodes with namespaces
-      let items = container.xpathEvalNodes("./ns:item", ns)?
+      let items = container.xpathEvalNodes("./ns:item", ns) as Array[Xml2Node]
       h.assert_eq[USize](2, items.size())
       h.assert_eq[String]("one", items(0)?.getContent())
 
       // Test node-level xpathEvalString with namespaces
-      let str_val = container.xpathEvalString("string(./ns:item[2])", ns)?
+      let str_val = container.xpathEvalString("string(./ns:item[2])", ns) as String val
       h.assert_eq[String]("two", str_val)
 
       // Test node-level xpathEvalF64 with namespaces
-      let count = container.xpathEvalF64("count(./ns:item)", ns)?
+      let count = container.xpathEvalF64("count(./ns:item)", ns) as F64
       h.assert_true(count == 2.0)
 
       // Test node-level xpathEvalBool with namespaces
-      let exists = container.xpathEvalBool("boolean(./ns:item)", ns)?
+      let exists = container.xpathEvalBool("boolean(./ns:item)", ns) as Bool
       h.assert_true(exists)
     else
       h.fail("Failed to parse XML or evaluate XPath")
@@ -322,7 +322,7 @@ class \nodoc\ iso TestXPathNoneResult is UnitTest
       </root>
       """
     try
-      let doc = Xml2Doc.parseDoc(xml)?
+      let doc = Xml2Parser.parseDoc(xml) as Xml2Doc
 
       // Invalid XPath should return None or error
       let res = doc.xpathEval("")
@@ -353,7 +353,7 @@ class \nodoc\ iso TestMultipleAttributes is UnitTest
       </root>
       """
     try
-      let doc = Xml2Doc.parseDoc(xml)?
+      let doc = Xml2Parser.parseDoc(xml) as Xml2Doc
       let root = doc.getRootElement()?
       let children = root.getChildren()
       let item = children(0)?
@@ -418,10 +418,10 @@ class \nodoc\ iso TestDeepNesting is UnitTest
       </level1>
       """
     try
-      let doc = Xml2Doc.parseDoc(xml)?
+      let doc = Xml2Parser.parseDoc(xml) as Xml2Doc
 
       // Test deep XPath query
-      let nodes = doc.xpathEvalNodes("//level5")?
+      let nodes = doc.xpathEvalNodes("//level5") as Array[Xml2Node]
       h.assert_eq[USize](1, nodes.size())
       h.assert_eq[String]("deep content", nodes(0)?.getContent())
       h.assert_eq[String](
@@ -463,25 +463,25 @@ class \nodoc\ iso TestXPathNumericOperations is UnitTest
       </prices>
       """
     try
-      let doc = Xml2Doc.parseDoc(xml)?
+      let doc = Xml2Parser.parseDoc(xml) as Xml2Doc
 
       // Test sum function
-      let total = doc.xpathEvalF64("sum(//item/@price)")?
+      let total = doc.xpathEvalF64("sum(//item/@price)") as F64
       h.assert_true((total > 36.49) and (total < 36.51))
 
       // Test count
-      let count = doc.xpathEvalF64("count(//item)")?
+      let count = doc.xpathEvalF64("count(//item)") as F64
       h.assert_true(count == 3.0)
 
       // Test numeric comparison in boolean
-      let has_expensive = doc.xpathEvalBool("boolean(//item[@price > 15])")?
+      let has_expensive = doc.xpathEvalBool("boolean(//item[@price > 15])") as Bool
       h.assert_true(has_expensive)
 
-      let has_cheap = doc.xpathEvalBool("boolean(//item[@price < 6])")?
+      let has_cheap = doc.xpathEvalBool("boolean(//item[@price < 6])") as Bool
       h.assert_true(has_cheap)
 
       let has_very_expensive =
-        doc.xpathEvalBool("boolean(//item[@price > 100])")?
+        doc.xpathEvalBool("boolean(//item[@price > 100])") as Bool
       h.assert_false(has_very_expensive)
     else
       h.fail("Failed to parse XML or evaluate XPath")
@@ -502,31 +502,31 @@ class \nodoc\ iso TestXPathStringFunctions is UnitTest
       </root>
       """
     try
-      let doc = Xml2Doc.parseDoc(xml)?
+      let doc = Xml2Parser.parseDoc(xml) as Xml2Doc
 
       // Test string-length
-      let len = doc.xpathEvalF64("string-length(//item[1]/@name)")?
+      let len = doc.xpathEvalF64("string-length(//item[1]/@name)") as F64
       h.assert_true(len == 11.0)  // "Hello World" = 11 chars
 
       // Test contains
-      let has_hello = doc.xpathEvalBool("contains(//item[1]/@name, 'Hello')")?
+      let has_hello = doc.xpathEvalBool("contains(//item[1]/@name, 'Hello')") as Bool
       h.assert_true(has_hello)
 
-      let has_bye = doc.xpathEvalBool("contains(//item[1]/@name, 'Goodbye')")?
+      let has_bye = doc.xpathEvalBool("contains(//item[1]/@name, 'Goodbye')") as Bool
       h.assert_false(has_bye)
 
       // Test starts-with
       let starts_hello =
-        doc.xpathEvalBool("starts-with(//item[1]/@name, 'Hello')")?
+        doc.xpathEvalBool("starts-with(//item[1]/@name, 'Hello')") as Bool
       h.assert_true(starts_hello)
 
       // Test concat
       let concat_result =
-        doc.xpathEvalString("concat('prefix-', //item[1]/@name, '-suffix')")?
+        doc.xpathEvalString("concat('prefix-', //item[1]/@name, '-suffix')") as String val
       h.assert_eq[String]("prefix-Hello World-suffix", concat_result)
 
       // Test normalize-space
-      let normalized = doc.xpathEvalString("normalize-space(//item[2]/@name)")?
+      let normalized = doc.xpathEvalString("normalize-space(//item[2]/@name)") as String val
       h.assert_eq[String]("spaces", normalized)
     else
       h.fail("Failed to parse XML or evaluate XPath")
@@ -541,7 +541,7 @@ class \nodoc\ iso TestEmptyDocument is UnitTest
   fun apply(h: TestHelper) =>
     let xml = "<root/>"
     try
-      let doc = Xml2Doc.parseDoc(xml)?
+      let doc = Xml2Parser.parseDoc(xml) as Xml2Doc
       let root = doc.getRootElement()?
 
       h.assert_eq[String]("root", root.name())
@@ -568,7 +568,7 @@ class \nodoc\ iso TestSpecialCharacters is UnitTest
       </root>
       """
     try
-      let doc = Xml2Doc.parseDoc(xml)?
+      let doc = Xml2Parser.parseDoc(xml) as Xml2Doc
       let root = doc.getRootElement()?
       let children = root.getChildren()
       let item = children(0)?
@@ -595,9 +595,9 @@ class \nodoc\ iso TestSerializeRoundTrip is UnitTest
   fun apply(h: TestHelper) =>
     let xml = "<root><child id=\"c1\">text</child></root>"
     try
-      let doc1 = Xml2Doc.parseDoc(xml)?
+      let doc1 = Xml2Parser.parseDoc(xml) as Xml2Doc
       let serialized = doc1.serialize(false)?  // compact
-      let doc2 = Xml2Doc.parseDoc(serialized)?
+      let doc2 = Xml2Parser.parseDoc(serialized) as Xml2Doc
 
       // Verify structure is preserved
       let root = doc2.getRootElement()?
@@ -620,7 +620,7 @@ class \nodoc\ iso TestSerializeFormatting is UnitTest
   fun apply(h: TestHelper) =>
     let xml = "<root><child>text</child></root>"
     try
-      let doc = Xml2Doc.parseDoc(xml)?
+      let doc = Xml2Parser.parseDoc(xml) as Xml2Doc
 
       // Compact should have no newlines in content
       let compact = doc.serialize(false)?
@@ -647,11 +647,11 @@ class \nodoc\ iso TestSaveToFile is UnitTest
       let auth = FileAuth(h.env.root)
 
       // Save document
-      let doc1 = Xml2Doc.parseDoc(xml)?
+      let doc1 = Xml2Parser.parseDoc(xml) as Xml2Doc
       doc1.saveToFile(auth, temp_file)?
 
       // Load it back
-      let doc2 = Xml2Doc.parseFile(auth, temp_file)?
+      let doc2 = Xml2Parser.parseFile(auth, temp_file) as Xml2Doc
       let root = doc2.getRootElement()?
       h.assert_eq[String]("root", root.name())
 
@@ -675,7 +675,7 @@ class \nodoc\ iso TestSerializeEncoding is UnitTest
   fun apply(h: TestHelper) =>
     let xml = "<root><child>Test content</child></root>"
     try
-      let doc = Xml2Doc.parseDoc(xml)?
+      let doc = Xml2Parser.parseDoc(xml) as Xml2Doc
 
       // UTF-8 encoding (default)
       let utf8 = doc.serialize(true, "UTF-8")?
@@ -698,7 +698,7 @@ class \nodoc\ iso TestSerializeModified is UnitTest
   fun apply(h: TestHelper) =>
     let xml = "<root><child id=\"old\">text</child></root>"
     try
-      let doc = Xml2Doc.parseDoc(xml)?
+      let doc = Xml2Parser.parseDoc(xml) as Xml2Doc
       let root = doc.getRootElement()?
       let children = root.getChildren()
 
@@ -723,7 +723,7 @@ class \nodoc\ iso TestSerializeErrors is UnitTest
     let xml = "<root><child>test</child></root>"
 
     try
-      let doc = Xml2Doc.parseDoc(xml)?
+      let doc = Xml2Parser.parseDoc(xml) as Xml2Doc
       let auth = FileAuth(h.env.root)
 
       // Try to save to invalid path (should error)
@@ -816,7 +816,7 @@ class \nodoc\ iso TestAddChildConvenience is UnitTest
       child2.setProp("id", "2")
 
       // Verify structure using XPath
-      let items = doc.xpathEvalNodes("//item")?
+      let items = doc.xpathEvalNodes("//item") as Array[Xml2Node]
       h.assert_eq[USize](2, items.size())
 
       // Verify attributes
@@ -895,18 +895,18 @@ class \nodoc\ iso TestComplexDocumentCreation is UnitTest
       body.appendChild(doc.createComment("End of content")?)?
 
       // Verify structure using XPath
-      h.assert_eq[USize](1, doc.xpathEvalNodes("//html")?.size())
-      h.assert_eq[USize](1, doc.xpathEvalNodes("//head")?.size())
-      h.assert_eq[USize](1, doc.xpathEvalNodes("//body")?.size())
-      h.assert_eq[USize](1, doc.xpathEvalNodes("//title")?.size())
-      h.assert_eq[USize](1, doc.xpathEvalNodes("//h1")?.size())
-      h.assert_eq[USize](1, doc.xpathEvalNodes("//p")?.size())
-      h.assert_eq[USize](1, doc.xpathEvalNodes("//em")?.size())
+      h.assert_eq[USize](1, (doc.xpathEvalNodes("//html") as Array[Xml2Node]).size())
+      h.assert_eq[USize](1, (doc.xpathEvalNodes("//head") as Array[Xml2Node]).size())
+      h.assert_eq[USize](1, (doc.xpathEvalNodes("//body") as Array[Xml2Node]).size())
+      h.assert_eq[USize](1, (doc.xpathEvalNodes("//title") as Array[Xml2Node]).size())
+      h.assert_eq[USize](1, (doc.xpathEvalNodes("//h1") as Array[Xml2Node]).size())
+      h.assert_eq[USize](1, (doc.xpathEvalNodes("//p") as Array[Xml2Node]).size())
+      h.assert_eq[USize](1, (doc.xpathEvalNodes("//em") as Array[Xml2Node]).size())
 
       // Verify content
-      h.assert_eq[String]("Test Page", doc.xpathEvalString("string(//title)")?)
-      h.assert_eq[String]("Welcome", doc.xpathEvalString("string(//h1)")?)
-      h.assert_eq[String]("This is emphasized text.", doc.xpathEvalString("string(//p)")?)
+      h.assert_eq[String]("Test Page", doc.xpathEvalString("string(//title)") as String val)
+      h.assert_eq[String]("Welcome", doc.xpathEvalString("string(//h1)") as String val)
+      h.assert_eq[String]("This is emphasized text.", doc.xpathEvalString("string(//p)") as String val)
 
       // Verify serialization
       let xml = doc.serialize()?
@@ -949,11 +949,11 @@ class \nodoc\ iso TestXPathResultPostFreeAccess is UnitTest
       </root>
       """
     try
-      let doc = Xml2Doc.parseDoc(xml)?
+      let doc = Xml2Parser.parseDoc(xml) as Xml2Doc
 
       // 1. Nodeset path: verify every node's name and content are readable
       //    after xpathEvalNodes returns (post-free correctness check).
-      let nodes = doc.xpathEvalNodes("//item")?
+      let nodes = doc.xpathEvalNodes("//item") as Array[Xml2Node]
       h.assert_eq[USize](4, nodes.size())
       h.assert_eq[String]("item", nodes(0)?.name())
       h.assert_eq[String]("item", nodes(3)?.name())
@@ -965,7 +965,7 @@ class \nodoc\ iso TestXPathResultPostFreeAccess is UnitTest
       //    across subsequent allocations.
       var i: USize = 0
       while i < 200 do
-        let again = doc.xpathEvalNodes("//item")?
+        let again = doc.xpathEvalNodes("//item") as Array[Xml2Node]
         h.assert_eq[USize](4, again.size())
         h.assert_eq[String]("item", again(0)?.name())
         i = i + 1
@@ -976,12 +976,12 @@ class \nodoc\ iso TestXPathResultPostFreeAccess is UnitTest
       // 3. String result path: stringval is owned by the XPath object and
       //    is freed when the object is freed. The clone must have happened
       //    before the free.
-      let s1: String = doc.xpathEvalString("string(//item[@id='b'])")?
+      let s1: String = doc.xpathEvalString("string(//item[@id='b'])") as String val
       h.assert_eq[String]("beta", s1)
       // Run repeatedly to surface any free-before-clone regression.
       var j: USize = 0
       while j < 200 do
-        let s = doc.xpathEvalString("string(//item[@id='c'])")?
+        let s = doc.xpathEvalString("string(//item[@id='c'])") as String val
         h.assert_eq[String]("gamma", s)
         j = j + 1
       end
@@ -991,8 +991,8 @@ class \nodoc\ iso TestXPathResultPostFreeAccess is UnitTest
       // 4. Scalar paths (Bool, F64): no buffer to free, but exercise the
       //    same code path to ensure the unconditional free at the end of
       //    Xml2XPathObject.apply doesn't crash on these branches.
-      h.assert_eq[F64](4.0, doc.xpathEvalF64("count(//item)")?)
-      h.assert_eq[Bool](true, doc.xpathEvalBool("count(//item) = 4")?)
+      h.assert_eq[F64](4.0, doc.xpathEvalF64("count(//item)") as F64)
+      h.assert_eq[Bool](true, doc.xpathEvalBool("count(//item) = 4") as Bool)
     else
       h.fail("Failed to exercise post-free XPath access")
     end
@@ -1018,7 +1018,7 @@ class \nodoc\ iso TestNodeDumpRepeatedCalls is UnitTest
     let xml =
       "<root><item id=\"a\">alpha</item><item id=\"b\">beta</item></root>"
     try
-      let doc = Xml2Doc.parseDoc(xml)?
+      let doc = Xml2Parser.parseDoc(xml) as Xml2Doc
       let root = doc.getRootElement()?
       let children = root.getChildren()
       h.assert_eq[USize](2, children.size())
@@ -1068,7 +1068,7 @@ class \nodoc\ iso TestNamespaceUriAndPrefix is UnitTest
       </repository>
       """
     try
-      let doc = Xml2Doc.parseDoc(xml)?
+      let doc = Xml2Parser.parseDoc(xml) as Xml2Doc
       let repository = doc.getRootElement()?
       // Root is in the default namespace - URI populated, prefix empty.
       h.assert_eq[String](
@@ -1129,7 +1129,7 @@ class \nodoc\ iso TestQname is UnitTest
       </root>
       """
     try
-      let doc = Xml2Doc.parseDoc(xml)?
+      let doc = Xml2Parser.parseDoc(xml) as Xml2Doc
       let root = doc.getRootElement()?
       let kids = root.getChildren()
 
@@ -1168,7 +1168,7 @@ class \nodoc\ iso TestGetPropNs is UnitTest
       </root>
       """
     try
-      let doc = Xml2Doc.parseDoc(xml)?
+      let doc = Xml2Parser.parseDoc(xml) as Xml2Doc
       let root = doc.getRootElement()?
       let field = root.getChildren()(0)?
 
@@ -1274,7 +1274,7 @@ class \nodoc\ iso TestParseDocNoBlanks is UnitTest
       // Default: blank text nodes preserved. getChildren() returns
       // element-only children, so we can't distinguish via that API
       // alone; instead, serialize and look for the indentation.
-      let doc_default = Xml2Doc.parseDoc(xml)?
+      let doc_default = Xml2Parser.parseDoc(xml) as Xml2Doc
       let root_default = doc_default.getRootElement()?
       let dump_default = root_default.nodeDump(0, 0)
       // With blanks preserved, nodeDump output includes the original
@@ -1284,7 +1284,7 @@ class \nodoc\ iso TestParseDocNoBlanks is UnitTest
       // With no_blanks: ignorable whitespace dropped during parse.
       // The serialized form has no inter-element whitespace.
       let opts = Xml2ParserOptions.create(where no_blanks' = true)
-      let doc_no_blanks = Xml2Doc.parseDoc(xml, opts)?
+      let doc_no_blanks = Xml2Parser.parseDoc(xml, opts) as Xml2Doc
       let root_no_blanks = doc_no_blanks.getRootElement()?
       let dump_no_blanks = root_no_blanks.nodeDump(0, 0)
       h.assert_eq[String](
@@ -1306,7 +1306,7 @@ class \nodoc\ iso TestParseDocErrorRecovery is UnitTest
 
     // Default: strict parse fails on this input.
     try
-      let _ = Xml2Doc.parseDoc(malformed)?
+      let _ = Xml2Parser.parseDoc(malformed) as Xml2Doc
       h.fail("Default parse should have rejected malformed XML")
     end
 
@@ -1314,7 +1314,7 @@ class \nodoc\ iso TestParseDocErrorRecovery is UnitTest
     // libxml2 reconstructed as best it could.
     let opts = Xml2ParserOptions.create(where error_recovery' = true)
     try
-      let doc = Xml2Doc.parseDoc(malformed, opts)?
+      let doc = Xml2Parser.parseDoc(malformed, opts) as Xml2Doc
       let root = doc.getRootElement()?
       // Whatever libxml2 recovers, the doc has a usable root.
       h.assert_eq[String]("root", root.name())
@@ -1341,7 +1341,7 @@ class \nodoc\ iso TestParseDocEntitiesNotSubstitutedByDefault is UnitTest
 
     // Default: entity reference preserved.
     try
-      let doc = Xml2Doc.parseDoc(xml)?
+      let doc = Xml2Parser.parseDoc(xml) as Xml2Doc
       let foo = doc.getRootElement()?
       let dump = foo.nodeDump(0, 0)
       h.assert_true(
@@ -1358,7 +1358,7 @@ class \nodoc\ iso TestParseDocEntitiesNotSubstitutedByDefault is UnitTest
     let opts = Xml2ParserOptions.create(
       where substitute_entities' = true)
     try
-      let doc = Xml2Doc.parseDoc(xml, opts)?
+      let doc = Xml2Parser.parseDoc(xml, opts) as Xml2Doc
       let foo = doc.getRootElement()?
       let dump = foo.nodeDump(0, 0)
       h.assert_false(
