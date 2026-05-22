@@ -10,7 +10,7 @@ class \nodoc\ iso TestXPath is UnitTest
 
     try
       let xmlbad: Xml2Doc =
-        Xml2Doc.parseFile(FileAuth(h.env.root), "Idontexist")?
+        Xml2Parser.parseFile(FileAuth(h.env.root), "Idontexist") as Xml2Doc
       h.assert_true(false) // Fail test if I execute here
     end
 
@@ -19,8 +19,9 @@ class \nodoc\ iso TestXPath is UnitTest
         .>push(("gi", "http://www.gtk.org/introspection/core/1.0"))
         .>push(( "c", "http://www.gtk.org/introspection/c/1.0"))
       let xmldoc: Xml2Doc =
-        Xml2Doc.parseFile(
-          FileAuth(h.env.root), "./libxml2/_tests/libxml2-2.0.gir")?
+        Xml2Parser.parseFile(
+          FileAuth(h.env.root),
+          "./libxml2/_tests/libxml2-2.0.gir") as Xml2Doc
       h.assert_eq[USize](
         (xmldoc.xpathEval("//*", ns) as Array[Xml2Node]).size(), 15)
       h.assert_eq[USize](

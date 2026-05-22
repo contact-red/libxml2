@@ -23,8 +23,11 @@ class val Xml2ParserOptions
 
   ```pony
   let opts = Xml2ParserOptions.create(
-    where no_blanks = true, pedantic = true)
-  let doc = Xml2Doc.parseDoc(xml, opts)?
+    where no_blanks' = true, pedantic' = true)
+  match Xml2Parser.parseDoc(xml, opts)
+  | let doc: Xml2Doc => // ...
+  | let err: Xml2Error => // ...
+  end
   ```
   """
 
@@ -91,8 +94,8 @@ class val Xml2ParserOptions
   fun to_flags(): I32 =>
     """
     Return the OR'd libxml2 `XML_PARSE_*` bitmask corresponding to
-    the enabled options. Consumed internally by `Xml2Doc.parseDoc` /
-    `parseFile` when calling `xmlReadDoc` / `xmlReadFile`.
+    the enabled options. Consumed internally by `Xml2Parser.parseDoc`
+    / `parseFile` when calling `xmlReadDoc` / `xmlReadFile`.
     """
     var f: I32 = 0
     if error_recovery      then f = f or 1 end       // XML_PARSE_RECOVER  = 1<<0

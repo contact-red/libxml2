@@ -29,15 +29,20 @@ If you're stuck, you can fall-back to the C API from the Pony API by using the C
 For example, if you need to call an as-yet unimplemented function which takes an xmlDocPtr as an argument, you can extract it like this:
 
 ```pony
-let xmldoc: Xml2Doc = Xml2Doc.xmlParseFile(FileAuth(env.root), "somefile.xml")?
-let xmldocptr: NullablePointer[Xmldoc] = xmldoc.ptr'
+match Xml2Parser.parseFile(FileAuth(env.root), "somefile.xml")
+| let xmldoc: Xml2Doc =>
+    let xmldocptr: NullablePointer[XmlDoc] = xmldoc.ptr'
+    // ...
+| let err: Xml2Error =>
+    env.err.print("parse failed: " + err.string())
+end
 ```
 
 If you need to go from the C API back to the Pony API, if implemented you can reverse it as follows:
 
 ```pony
-let s: NullablePointer[Xmlnode] = LibXML2.(some API call)
-let xmlnode: Xml2node = Xml2node.fromPTR(s)
+let s: NullablePointer[XmlNode] = LibXML2.(some API call)
+let xmlnode: Xml2Node = Xml2Node.fromPTR(s)
 ```
 
 ### How do I start?

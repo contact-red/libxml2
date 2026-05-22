@@ -131,16 +131,16 @@ class \nodoc\ iso FuzzXPathExpression is Property1[String]
 
   fun ref property(arg1: String, h: PropertyHelper) =>
     h.assert_no_error({() ? =>
-      let doc = Xml2Doc.parseDoc(
-        "<root><a id=\"x\">one</a><b>two</b></root>")?
+      let doc = Xml2Parser.parseDoc(
+        "<root><a id=\"x\">one</a><b>two</b></root>") as Xml2Doc
       // Non-partial form must not crash regardless of input.
       let _ = doc.xpathEval(arg1)
       // Partial convenience forms may raise on invalid expressions.
       try
-        let _ = doc.xpathEvalNodes(arg1)?
+        let _ = doc.xpathEvalNodes(arg1) as Array[Xml2Node]
       end
       try
-        let _ = doc.xpathEvalString(arg1)?
+        let _ = doc.xpathEvalString(arg1) as String val
       end
     } box)
 
