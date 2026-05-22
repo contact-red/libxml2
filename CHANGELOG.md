@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a CHANGELOG](http://keepachangelog.com/).
 
-## [unreleased] - unreleased
+## [1.1.2] - 2026-05-22
 
 ### Fixed
 
@@ -18,9 +18,6 @@ All notable changes to this project will be documented in this file. This projec
 - Adds serialization API ([PR #25](https://github.com/redvers/libxml2/pull/25))
 - Add document creation API ([PR #27](https://github.com/redvers/libxml2/pull/27))
 - Adds crash-resistance fuzz tests for the Pony API ([PR #32](https://github.com/contact-red/libxml2/pull/32))
-
-### Changed
-
 
 ## [1.1.1] - 2026-01-11
 
