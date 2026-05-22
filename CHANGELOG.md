@@ -7,10 +7,12 @@ All notable changes to this project will be documented in this file. This projec
 ### Fixed
 
 - Adds parser options and safer parsing defaults ([PR #35](https://github.com/contact-red/libxml2/pull/35))
+- Returns errors as data from parsing and XPath ([PR #36](https://github.com/contact-red/libxml2/pull/36))
 
 ### Added
 
 - Adds namespace-aware accessors to Xml2Node ([PR #34](https://github.com/contact-red/libxml2/pull/34))
+- Returns errors as data from parsing and XPath ([PR #36](https://github.com/contact-red/libxml2/pull/36))
 
 ### Changed
 
