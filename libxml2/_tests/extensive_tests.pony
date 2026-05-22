@@ -1,4 +1,5 @@
 use "../../libxml2"
+use "../../libxml2/raw"
 use "pony_test"
 use "pony_check"
 use "files"
@@ -485,6 +486,9 @@ class \nodoc\ iso PropSetGetPropRoundTrip is Property1[(String, String)]
   """
   fun name(): String => "extensive/prop-set-get-roundtrip/property"
 
+  fun params(): PropertyParams =>
+    PropertyParams(where num_samples' = 500)
+
   fun gen(): Generator[(String, String)] =>
     Generators.zip2[String, String](
       Generators.ascii_letters(1, 32),
@@ -509,8 +513,11 @@ class \nodoc\ iso PropAppendChildPreservesCount is Property1[USize]
   fun name(): String =>
     "extensive/append-child-preserves-count/property"
 
+  fun params(): PropertyParams =>
+    PropertyParams(where num_samples' = 500)
+
   fun gen(): Generator[USize] =>
-    Generators.usize(where min = USize(0), max = USize(50))
+    Generators.usize(where min = USize(0), max = USize(200))
 
   fun ref property(arg1: USize, h: PropertyHelper) =>
     h.assert_no_error({() ? =>
@@ -1026,9 +1033,12 @@ class \nodoc\ iso PropStructuralRoundTripStable is Property1[Array[String]]
   fun name(): String =>
     "extensive/structural-roundtrip-stable/property"
 
+  fun params(): PropertyParams =>
+    PropertyParams(where num_samples' = 500)
+
   fun gen(): Generator[Array[String]] =>
     Generators.seq_of[String, Array[String]](
-      Generators.ascii_letters(1, 16), 0, 8)
+      Generators.ascii_letters(1, 16), 0, 32)
 
   fun ref property(arg1: Array[String], h: PropertyHelper) =>
     h.assert_no_error({() ? =>
@@ -1071,8 +1081,11 @@ class \nodoc\ iso PropGetPropsCardinality is Property1[USize]
   """
   fun name(): String => "extensive/getprops-cardinality/property"
 
+  fun params(): PropertyParams =>
+    PropertyParams(where num_samples' = 500)
+
   fun gen(): Generator[USize] =>
-    Generators.usize(where min = USize(0), max = USize(40))
+    Generators.usize(where min = USize(0), max = USize(200))
 
   fun ref property(arg1: USize, h: PropertyHelper) =>
     h.assert_no_error({() ? =>
@@ -1095,6 +1108,9 @@ class \nodoc\ iso PropSetUnsetIsEmpty is Property1[(String, String)]
   """
   fun name(): String => "extensive/set-unset-is-empty/property"
 
+  fun params(): PropertyParams =>
+    PropertyParams(where num_samples' = 500)
+
   fun gen(): Generator[(String, String)] =>
     Generators.zip2[String, String](
       Generators.ascii_letters(1, 32),
@@ -1110,3 +1126,405 @@ class \nodoc\ iso PropSetUnsetIsEmpty is Property1[(String, String)]
       h.assert_eq[String]("", root.getProp(n))
       h.assert_eq[USize](0, root.getProps().size())
     } box)
+
+// ---------------------------------------------------------------
+// Tree mutation: re-parenting
+// ---------------------------------------------------------------
+
+class \nodoc\ iso TestAppendChildPreservesOrder is UnitTest
+  """
+  Multiple `appendChild` calls preserve insertion order: the
+  resulting `getChildren()` returns nodes in the order they were
+  appended, and an XPath positional query agrees.
+
+  (Note: re-parenting an existing child via `appendChild` is not
+  well-defined in the current API - `xmlAddChild` does not detach
+  the node from its previous parent, which would require an
+  explicit `xmlUnlinkNode` call this binding doesn't expose. This
+  test focuses on the supported case of building a tree from new
+  nodes.)
+  """
+  fun name(): String => "extensive/append-child-preserves-order"
+
+  fun apply(h: TestHelper) =>
+    try
+      let doc = Xml2Doc.createWithRoot("root")?
+      let root = doc.getRootElement()?
+      let names = ["alpha"; "beta"; "gamma"; "delta"; "epsilon"]
+      for nm in names.values() do
+        let c = doc.createElement(nm)?
+        root.appendChild(c)?
+      end
+      let kids = root.getChildren()
+      h.assert_eq[USize](names.size(), kids.size())
+      var i: USize = 0
+      while i < names.size() do
+        h.assert_eq[String](names(i)?, kids(i)?.name())
+        i = i + 1
+      end
+      // XPath positional agreement: /root/*[3] is the third child.
+      match doc.xpathEvalString("name(/root/*[3])")
+      | let s: String val => h.assert_eq[String]("gamma", s)
+      | let _: Xml2Error => h.fail("positional XPath failed")
+      end
+    else
+      h.fail("appendChild order test failed")
+    end
+
+// ---------------------------------------------------------------
+// DOCTYPE handling
+// ---------------------------------------------------------------
+
+class \nodoc\ iso TestDoctypeParsing is UnitTest
+  """
+  Documents with a DOCTYPE declaration parse successfully and the
+  declaration is preserved through serialise/parse round-trips. The
+  Pony API doesn't yet expose DTD-specific accessors, but the doc
+  must remain navigable.
+  """
+  fun name(): String => "extensive/doctype-parsing"
+
+  fun apply(h: TestHelper) =>
+    let html_like =
+      "<!DOCTYPE html><html><body><p>hi</p></body></html>"
+    match Xml2Parser.parseDoc(html_like)
+    | let doc: Xml2Doc =>
+      try
+        let root = doc.getRootElement()?
+        h.assert_eq[String]("html", root.name())
+        // The body and p must be navigable.
+        let body = root.getChildren()(0)?
+        h.assert_eq[String]("body", body.name())
+        h.assert_eq[String]("p", body.getChildren()(0)?.name())
+        // Round-trip preserves the DOCTYPE in serialised output.
+        let s = doc.serialize(false)?
+        h.assert_true(
+          s.contains("<!DOCTYPE html"),
+          "serialised doc should preserve DOCTYPE; got: " + s)
+      else
+        h.fail("DOCTYPE traversal failed")
+      end
+    | let err: Xml2Error =>
+      h.fail("DOCTYPE parse failed: " + err.string())
+    end
+
+// ---------------------------------------------------------------
+// Empty / minimal document edge cases
+// ---------------------------------------------------------------
+
+class \nodoc\ iso TestEmptyDocumentVariants is UnitTest
+  """
+  Distinguish what parses from what doesn't at the boundary of
+  "empty":
+
+    - `<r/>`                          - valid empty element
+    - `<r></r>`                       - valid empty element (long)
+    - `<?xml version="1.0"?>`         - declaration with no root,
+                                        should be rejected
+    - `   ` (whitespace only)         - should be rejected
+    - `""` (empty string)             - should be rejected
+  """
+  fun name(): String => "extensive/empty-document-variants"
+
+  fun apply(h: TestHelper) =>
+    // Valid forms succeed.
+    match Xml2Parser.parseDoc("<r/>")
+    | let _: Xml2Doc => None
+    | let err: Xml2Error =>
+      h.fail("<r/> should parse, got: " + err.string())
+    end
+    match Xml2Parser.parseDoc("<r></r>")
+    | let _: Xml2Doc => None
+    | let err: Xml2Error =>
+      h.fail("<r></r> should parse, got: " + err.string())
+    end
+    // Invalid forms produce an error rather than a doc.
+    match Xml2Parser.parseDoc("<?xml version=\"1.0\"?>")
+    | let _: Xml2Doc =>
+      h.fail("XML declaration alone should not produce a doc")
+    | let _: Xml2Error => None
+    end
+    match Xml2Parser.parseDoc("   ")
+    | let _: Xml2Doc => h.fail("whitespace-only should not parse")
+    | let _: Xml2Error => None
+    end
+    match Xml2Parser.parseDoc("")
+    | let _: Xml2Doc => h.fail("empty string should not parse")
+    | let _: Xml2Error => None
+    end
+
+// ---------------------------------------------------------------
+// XPath against a doc with no root
+// ---------------------------------------------------------------
+
+class \nodoc\ iso TestXPathOnDocWithoutRoot is UnitTest
+  """
+  `Xml2Doc.create()` produces a doc with no root element. XPath
+  evaluation against such a doc must not crash. Both `xpathEval`
+  (non-partial) and the typed convenience methods are exercised.
+  """
+  fun name(): String => "extensive/xpath-on-doc-without-root"
+
+  fun apply(h: TestHelper) =>
+    try
+      let doc = Xml2Doc.create()?
+      // Bare-result form: any of the union variants is acceptable
+      // (None / empty array / Xml2Error). The important thing is
+      // no crash.
+      let _ = doc.xpathEval("//anything")
+      // Typed-nodeset form: with no root, "//anything" matches
+      // nothing. Should return an empty Array[Xml2Node] (libxml2
+      // succeeds with a nodeset of size 0).
+      match doc.xpathEvalNodes("//anything")
+      | let nodes: Array[Xml2Node] =>
+        h.assert_eq[USize](0, nodes.size())
+      | let _: Xml2Error =>
+        // Acceptable: some libxml2 versions may error rather than
+        // returning an empty set; either is non-crashing.
+        None
+      end
+    else
+      h.fail("Xml2Doc.create / xpath on empty doc failed")
+    end
+
+// ---------------------------------------------------------------
+// Parser flags: DTD attribute defaulting
+// ---------------------------------------------------------------
+
+class \nodoc\ iso TestLoadDtdFlagsAcceptValidInput is UnitTest
+  """
+  Documents containing an internal DTD subset must parse with the
+  load_dtd and load_dtd_attrs options set without error, and the
+  document tree must be usable after parsing. (Whether default
+  attributes from inline ATTLIST declarations are applied to
+  matching elements depends on libxml2's validation pass and is
+  not asserted here.)
+  """
+  fun name(): String => "extensive/load-dtd-flags-accept-valid"
+
+  fun apply(h: TestHelper) =>
+    let xml =
+      "<!DOCTYPE r [<!ATTLIST r class CDATA \"default-value\">]>"
+      + "<r><child/></r>"
+    let opts = Xml2ParserOptions.create(
+      where load_dtd' = true, load_dtd_attrs' = true)
+    match Xml2Parser.parseDoc(xml, opts)
+    | let doc: Xml2Doc =>
+      try
+        let r = doc.getRootElement()?
+        h.assert_eq[String]("r", r.name())
+        h.assert_eq[USize](1, r.getChildren().size())
+        h.assert_eq[String]("child", r.getChildren()(0)?.name())
+        // Round-trip preserves the DOCTYPE.
+        let s = doc.serialize(false)?
+        h.assert_true(
+          s.contains("<!DOCTYPE r"),
+          "DOCTYPE should survive round-trip; got: " + s)
+      else
+        h.fail("load_dtd traversal failed")
+      end
+    | let err: Xml2Error =>
+      h.fail(
+        "load_dtd options should accept valid input; got error: "
+          + err.string())
+    end
+
+// ---------------------------------------------------------------
+// Pedantic mode regression
+// ---------------------------------------------------------------
+
+class \nodoc\ iso TestPedanticAcceptsValidInput is UnitTest
+  """
+  `pedantic = true` enables stricter warning reporting but must not
+  reject standards-compliant XML. This test guards against a
+  regression where pedantic mode accidentally fails on valid input.
+  """
+  fun name(): String => "extensive/pedantic-accepts-valid"
+
+  fun apply(h: TestHelper) =>
+    let xml =
+      "<r><a id=\"1\">first</a><b id=\"2\">second</b></r>"
+    let opts = Xml2ParserOptions.create(where pedantic' = true)
+    match Xml2Parser.parseDoc(xml, opts)
+    | let doc: Xml2Doc =>
+      try
+        let root = doc.getRootElement()?
+        h.assert_eq[USize](2, root.getChildren().size())
+        h.assert_eq[String]("first",
+          root.getChildren()(0)?.getContent())
+      else
+        h.fail("pedantic traversal failed")
+      end
+    | let err: Xml2Error =>
+      h.fail(
+        "pedantic mode should accept valid XML; got error: "
+          + err.string())
+    end
+
+// ---------------------------------------------------------------
+// Deeply nested XPath
+// ---------------------------------------------------------------
+
+class \nodoc\ iso TestDeepXPathExpression is UnitTest
+  """
+  Build a 20-level-deep tree and verify that an absolute XPath
+  navigates to the deepest node and that a descendant-axis query
+  finds it from the root. Exercises libxml2's path resolution on
+  longer paths than the basic tests use.
+  """
+  fun name(): String => "extensive/deep-xpath-expression"
+
+  fun apply(h: TestHelper) =>
+    try
+      let doc = Xml2Doc.createWithRoot("root")?
+      var parent = doc.getRootElement()?
+      var i: USize = 0
+      while i < 20 do
+        let child = doc.createElement("n")?
+        parent.appendChild(child)?
+        parent = child
+        i = i + 1
+      end
+      // Tag the deepest node so we can find it specifically.
+      parent.setProp("marker", "leaf")
+
+      // Absolute path: /root/n/n/.../n (20 n's deep).
+      let absolute_path: String iso = recover iso String end
+      absolute_path.append("/root")
+      var j: USize = 0
+      while j < 20 do
+        absolute_path.append("/n")
+        j = j + 1
+      end
+      let absolute_path_str: String val = consume absolute_path
+
+      match doc.xpathEvalNodes(absolute_path_str)
+      | let nodes: Array[Xml2Node] =>
+        h.assert_eq[USize](1, nodes.size())
+        h.assert_eq[String]("leaf", nodes(0)?.getProp("marker"))
+      | let _: Xml2Error => h.fail("absolute deep path failed")
+      end
+
+      // Descendant axis: find the marker via attribute predicate.
+      match doc.xpathEvalNodes("//n[@marker='leaf']")
+      | let nodes: Array[Xml2Node] =>
+        h.assert_eq[USize](1, nodes.size())
+      | let _: Xml2Error => h.fail("descendant-marker query failed")
+      end
+    else
+      h.fail("deep-tree construction failed")
+    end
+
+// ---------------------------------------------------------------
+// xml:space attribute
+// ---------------------------------------------------------------
+
+class \nodoc\ iso TestXmlSpaceAttributePreserved is UnitTest
+  """
+  `xml:space` is in the implicit XML namespace
+  `http://www.w3.org/XML/1998/namespace`. Verify that it is
+  preserved through parse / serialise and is readable via
+  `getPropNs` with the XML namespace URI. (Reading it via
+  `getProp("xml:space")` is implementation-defined since `getProp`
+  is namespace-unaware.)
+  """
+  fun name(): String => "extensive/xml-space-preserved"
+
+  fun apply(h: TestHelper) =>
+    let xml_ns = "http://www.w3.org/XML/1998/namespace"
+    let xml =
+      "<r xml:space=\"preserve\"><a xml:space=\"default\"/></r>"
+    match Xml2Parser.parseDoc(xml)
+    | let doc: Xml2Doc =>
+      try
+        let root = doc.getRootElement()?
+        h.assert_eq[String](
+          "preserve", root.getPropNs(xml_ns, "space"))
+        let a = root.getChildren()(0)?
+        h.assert_eq[String](
+          "default", a.getPropNs(xml_ns, "space"))
+        // Round-trip via serialise.
+        let s = doc.serialize(false)?
+        h.assert_true(
+          s.contains("xml:space=\"preserve\""),
+          "serialised root must keep xml:space attribute; got: "
+            + s)
+      else
+        h.fail("xml:space traversal failed")
+      end
+    | let err: Xml2Error =>
+      h.fail("xml:space parse failed: " + err.string())
+    end
+
+// ---------------------------------------------------------------
+// Namespace prefix shadowing
+// ---------------------------------------------------------------
+
+class \nodoc\ iso TestNamespacePrefixShadowing is UnitTest
+  """
+  When the same namespace prefix is redeclared on a nested element,
+  the inner declaration shadows the outer for that subtree.
+  `Xml2Node.namespaceUri()` must return the URI in scope at each
+  node - the outer URI for nodes outside the redeclaration, the
+  inner URI for the redeclaring element and its descendants.
+  """
+  fun name(): String => "extensive/namespace-prefix-shadowing"
+
+  fun apply(h: TestHelper) =>
+    let outer_uri = "http://example.com/outer"
+    let inner_uri = "http://example.com/inner"
+    let xml: String val =
+      "<r xmlns:x=\"" + outer_uri + "\">"
+      + "<x:outer>"
+      + "<x:inner xmlns:x=\"" + inner_uri + "\">"
+      + "<x:deepest/>"
+      + "</x:inner>"
+      + "</x:outer>"
+      + "</r>"
+    match Xml2Parser.parseDoc(xml)
+    | let doc: Xml2Doc =>
+      try
+        let r = doc.getRootElement()?
+        let outer = r.getChildren()(0)?
+        let inner = outer.getChildren()(0)?
+        let deepest = inner.getChildren()(0)?
+        h.assert_eq[String](outer_uri, outer.namespaceUri())
+        h.assert_eq[String](inner_uri, inner.namespaceUri())
+        // deepest inherits the inner declaration.
+        h.assert_eq[String](inner_uri, deepest.namespaceUri())
+        // All three report prefix "x" - prefix is source-level
+        // and doesn't change with shadowing.
+        h.assert_eq[String]("x", outer.namespacePrefix())
+        h.assert_eq[String]("x", inner.namespacePrefix())
+        h.assert_eq[String]("x", deepest.namespacePrefix())
+      else
+        h.fail("shadowing traversal failed")
+      end
+    | let err: Xml2Error =>
+      h.fail("shadowing parse failed: " + err.string())
+    end
+
+// ---------------------------------------------------------------
+// Xml2Node.fromPTR error path
+// ---------------------------------------------------------------
+
+class \nodoc\ iso TestFromPTRRejectsNull is UnitTest
+  """
+  `Xml2Node.fromPTR` is documented to raise on a `None` pointer.
+  Verify the error path explicitly: the call must raise rather
+  than silently produce a wrapper around a null pointer.
+  """
+  fun name(): String => "extensive/from-ptr-rejects-null"
+
+  fun apply(h: TestHelper) =>
+    try
+      let doc = Xml2Doc.createWithRoot("root")?
+      try
+        let _ = Xml2Node.fromPTR(
+          recover tag doc end,
+          NullablePointer[XmlNode].none())?
+        h.fail("fromPTR with None pointer should have raised")
+      end
+    else
+      h.fail("could not even build the doc to test fromPTR null path")
+    end

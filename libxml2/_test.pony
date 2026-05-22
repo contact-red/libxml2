@@ -114,6 +114,17 @@ actor \nodoc\ Main is TestList
       recover iso PropGetPropsCardinality end))
     test(Property1UnitTest[(String, String)](
       recover iso PropSetUnsetIsEmpty end))
+    // Extensive API coverage (batch 3)
+    test(TestAppendChildPreservesOrder)
+    test(TestDoctypeParsing)
+    test(TestEmptyDocumentVariants)
+    test(TestXPathOnDocWithoutRoot)
+    test(TestLoadDtdFlagsAcceptValidInput)
+    test(TestPedanticAcceptsValidInput)
+    test(TestDeepXPathExpression)
+    test(TestXmlSpaceAttributePreserved)
+    test(TestNamespacePrefixShadowing)
+    test(TestFromPTRRejectsNull)
     // Crash-resistance fuzz tests (PonyCheck Property1)
     test(Property1UnitTest[String](recover iso FuzzParseDoc end))
     test(Property1UnitTest[(String, String)](
