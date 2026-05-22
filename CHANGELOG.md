@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Fixed
 
+- Adds parser options and safer parsing defaults ([PR #35](https://github.com/contact-red/libxml2/pull/35))
 
 ### Added
 
